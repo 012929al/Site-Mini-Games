@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcadeVerse | Plataforma de Jogos Premium</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="bg-glow"></div>
+
+        <header id="main-header" style="display: none;">
+        <div class="logo">
+            <i class="fa-solid fa-gamepad icon-logo"></i>
+            <span>ARCADE<span>VERSE</span></span>
+        </div>
+        
+        <div class="menu-container">
+            <button onclick="toggleUserMenu()" class="hamburger-btn" id="hamburger-trigger">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+
+            <div id="user-menu-drawer" class="user-drawer">
+                <div class="drawer-profile">
+                    <div class="profile-avatar" onclick="triggerAvatarUpload()" title="Clique para mudar a foto de perfil">
+                        <img id="profile-img" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                        <i id="profile-icon" class="fa-solid fa-user-astronaut"></i>
+                        <div class="avatar-overlay">
+                            <i class="fa-solid fa-camera"></i>
+                        </div>
+                    </div>
+                    <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="handleAvatarSelection(event)">
+
+                    <h3 id="drawer-username">Player</h3>
+                    <span id="drawer-level"><i class="fa-solid fa-crown"></i> Nível: 0</span>
+                </div>
+                <div class="drawer-divider"></div>
+                <div class="drawer-actions">
+                    <button onclick="switchAccount()" class="btn-drawer-action btn-switch">
+                        <i class="fa-solid fa-users-gear"></i> Trocar de Conta
+                    </button>
+                    <button onclick="logoutUser()" class="btn-drawer-action btn-logout">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        
+        <section id="auth-view" class="view active">
+            <div class="auth-wrapper">
+                <div class="auth-logo">
+                    <i class="fa-solid fa-gamepad icon-logo"></i>
+                    <span>ARCADE<span>VERSE</span></span>
+                </div>
+                
+                <div id="login-box" class="auth-card">
+                    <h2>Iniciar Sessão</h2>
+                    <form id="login-form">
+                        <div class="input-group">
+                            <label>Usuário</label>
+                            <input type="text" id="login-username" required placeholder="Digite seu username">
+                        </div>
+                        <div class="input-group">
+                            <label>Senha</label>
+                            <input type="password" id="login-password" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn-auth">ENTRAR NO ARCADE</button>
+                    </form>
+                    <p class="auth-switch">Não tem uma conta? <a href="#" onclick="toggleAuthMode('register')">Registre-se</a></p>
+                </div>
+
+                <div id="register-box" class="auth-card" style="display: none;">
+                    <h2>Criar Nova Conta</h2>
+                    <form id="register-form">
+                        <div class="input-group">
+                            <label>Escolha um Usuário</label>
+                            <input type="text" id="reg-username" required placeholder="Ex: Player123">
+                        </div>
+                        <div class="input-group">
+                            <label>Crie uma Senha</label>
+                            <input type="password" id="reg-password" required placeholder="Mínimo 4 caracteres">
+                        </div>
+                        <button type="submit" class="btn-auth btn-register-color">CRIAR CONTA</button>
+                    </form>
+                    <p class="auth-switch">Já tem conta? <a href="#" onclick="toggleAuthMode('login')">Faça Login</a></p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="hub-view" class="view">
+            <h2 class="section-title">Escolha seu Desafio</h2>
+            <div class="games-grid">
+                
+                <div class="game-card" onclick="launchGame('clicker')">
+                    <div class="card-banner bg-clicker"><i class="fa-solid fa-hand-pointer game-icon"></i></div>
+                    <div class="card-body">
+                        <h3>Clicker Estelar</h3>
+                        <p>Evolua sua base minerando cristais cósmicos.</p>
+                        <div class="progress-info">
+                            <span>Nível <strong id="hub-clicker-lvl">1</strong></span>
+                            <div class="bar"><div id="hub-clicker-bar" class="progress"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-card" onclick="launchGame('memory')">
+                    <div class="card-banner bg-memory"><i class="fa-solid fa-brain game-icon"></i></div>
+                    <div class="card-body">
+                        <h3>Memória Neon</h3>
+                        <p>Encontre os pares antes que o tempo acabe.</p>
+                        <div class="progress-info">
+                            <span>Fase <strong id="hub-memory-lvl">1</strong></span>
+                            <div class="bar"><div id="hub-memory-bar" class="progress"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-card" onclick="launchGame('math')">
+                    <div class="card-banner bg-math"><i class="fa-solid fa-calculator game-icon"></i></div>
+                    <div class="card-body">
+                        <h3>Matemática Express</h3>
+                        <p>Raciocínio rápido contra o relógio digital.</p>
+                        <div class="progress-info">
+                            <span>Nível <strong id="hub-math-lvl">1</strong></span>
+                            <div class="bar"><div id="hub-math-bar" class="progress"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-card" onclick="launchGame('reaction')">
+                    <div class="card-banner bg-reaction"><i class="fa-solid fa-bolt game-icon"></i></div>
+                    <div class="card-body">
+                        <h3>Reflexo Ninja</h3>
+                        <p>Clique no momento exato e teste sua velocidade.</p>
+                        <div class="progress-info">
+                            <span>Ranking <strong id="hub-reaction-lvl">1</strong></span>
+                            <div class="bar"><div id="hub-reaction-bar" class="progress"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-card" onclick="launchGame('stacker')">
+                    <div class="card-banner bg-stacker"><i class="fa-solid fa-layer-group game-icon"></i></div>
+                    <div class="card-body">
+                        <h3>Empilhador Moderno</h3>
+                        <p>Alinhe os blocos perfeitamente para subir.</p>
+                        <div class="progress-info">
+                            <span>Andar <strong id="hub-stacker-lvl">1</strong></span>
+                            <div class="bar"><div id="hub-stacker-bar" class="progress"></div></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="game-card" onclick="launchGame('tictactoe')">
+                    <div class="card-banner bg-tictactoe"><i class="fa-solid fa-shapes game-icon"></i></div>
+                    <div class="card-body">
+                        <h3>IA Suprema (Velha)</h3>
+                        <p>Enfronte uma mente digital matemática impossível de vencer.</p>
+                        <div class="progress-info">
+                            <span>Pontos <strong id="hub-tictactoe-lvl">0</strong></span>
+                            <div class="bar"><div id="hub-tictactoe-bar" class="progress"></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="game-view" class="view">
+            <div class="game-header">
+                <button onclick="backToHub()" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Voltar ao Hub</button>
+                <h2 id="current-game-title">Nome do Jogo</h2>
+                <div id="game-current-stat">Nível: 1</div>
+            </div>
+            <div id="game-stage" class="game-stage"></div>
+        </section>
+
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
