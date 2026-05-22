@@ -1,6 +1,9 @@
-// BANCO DE DADOS LOCAL E ESTADO DE SESSÃO
+/* =========================================================================
+   BANCO DE DADOS LOCAL E CONFIGURAÇÕES INICIAIS
+   ========================================================================= */
 let usersDatabase = [];
 let currentLoggedInUser = null;
+let playerProgress = {};
 
 const defaultProgress = {
     clicker: { level: 1, currentPoints: 0, requiredPoints: 50 },
@@ -8,42 +11,15 @@ const defaultProgress = {
     math: { level: 1, streak: 0 },
     reaction: { level: 1, bestTime: 9999 },
     stacker: { level: 1, topScore: 0 },
-    tictactoe: { level: 0 } // <-- ADICIONE ESTA LINHA (Será a contagem de empates/vitórias contra a IA)
+    tictactoe: { level: 0 }
 };
 
-let playerProgress = {};
-
+// Inicialização do Sistema de Autenticação
 document.addEventListener("DOMContentLoaded", () => {
     loadAuthSystem();
     setupAuthEvents();
-    setupGlobalClickClose();
 });
 
-/* ==========================================
-   MECÂNICA E INTERAÇÕES DO MENU HAMBÚRGUER
-   ========================================== */
-function toggleUserMenu() {
-    const drawer = document.getElementById("user-menu-drawer");
-    drawer.classList.toggle("open");
-}
-
-// Fecha o menu automaticamente se o jogador clicar em qualquer outro lugar da tela
-function setupGlobalClickClose() {
-    document.addEventListener("click", (e) => {
-        const drawer = document.getElementById("user-menu-drawer");
-        const trigger = document.getElementById("hamburger-trigger");
-        
-        if (drawer && drawer.classList.contains("open")) {
-            if (!drawer.contains(e.target) && !trigger.contains(e.target)) {
-                drawer.classList.remove("open");
-            }
-        }
-    });
-}
-
-/* ==========================================
-   AUTENTICAÇÃO & COMPORTAMENTO DE CONTAS
-   ========================================== */
 function loadAuthSystem() {
     const savedUsers = localStorage.getItem("arcade_verse_users");
     usersDatabase = savedUsers ? JSON.parse(savedUsers) : [];
@@ -56,69 +32,48 @@ function loadAuthSystem() {
             return;
         }
     }
-    function loadAuthSystem() {
-        const savedUsers = localStorage.getItem("arcade_verse_users");
-        usersDatabase = savedUsers ? JSON.parse(savedUsers) : [];
-    
-        const sessionToken = localStorage.getItem("arcade_verse_session");
-        if (sessionToken) {
-            const foundUser = usersDatabase.find(u => u.username === sessionToken);
-            if (foundUser) {
-                loginSuccess(foundUser);
-                startArcadeMusic(); // <-- ADICIONE ISSO AQUI
-                return;
-            }
-        }
-        showView("auth-view");
-        document.getElementById("main-header").style.display = "none";
-    }
     showView("auth-view");
     document.getElementById("main-header").style.display = "none";
 }
 
 function setupAuthEvents() {
+    // Formulário de Login
     document.getElementById("login-form").addEventListener("submit", (e) => {
         e.preventDefault();
-        const userIn = document.getElementById("login-username").value.trim();
-        const passIn = document.getElementById("login-password").value;
+        const userIn = document.getElementById("login-user").value.trim();
+        const passIn = document.getElementById("login-pass").value;
 
-        const user = usersDatabase.find(u => u.username.toLowerCase() === userIn.toLowerCase());
-        
-        if (user && user.password === passIn) {
+        const user = usersDatabase.find(u => u.username === userIn && u.password === passIn);
+        if (user) {
             loginSuccess(user);
         } else {
             alert("Usuário ou senha incorretos!");
         }
     });
 
+    // Formulário de Registro
     document.getElementById("register-form").addEventListener("submit", (e) => {
         e.preventDefault();
-        const userIn = document.getElementById("reg-username").value.trim();
-        const passIn = document.getElementById("reg-password").value;
+        const userIn = document.getElementById("reg-user").value.trim();
+        const passIn = document.getElementById("reg-pass").value;
 
-        if (userIn.length < 3 || passIn.length < 4) {
-            alert("Username min: 3 letras. Senha min: 4 dígitos.");
-            return;
-        }
+        if (userIn.length < 3) return alert("O usuário deve ter ao menos 3 caracteres.");
+        if (passIn.length < 4) return alert("A senha deve ter ao menos 4 caracteres.");
 
-        const userExists = usersDatabase.some(u => u.username.toLowerCase() === userIn.toLowerCase());
-        if (userExists) {
-            alert("Nome de usuário indisponível!");
-            return;
-        }
+        const existing = usersDatabase.find(u => u.username === userIn);
+        if (existing) return alert("Esse nome de usuário já está em uso!");
 
         const newUser = {
             username: userIn,
             password: passIn,
-            avatar: null, // Armazenará a string base64 compactada da foto
+            avatar: null,
             progress: JSON.parse(JSON.stringify(defaultProgress))
         };
 
         usersDatabase.push(newUser);
         localStorage.setItem("arcade_verse_users", JSON.stringify(usersDatabase));
-        
-        alert("Conta registrada! Faça login para jogar.");
-        toggleAuthMode("login");
+        alert("Conta criada com sucesso! Faça o login.");
+        document.getElementById("register-form").reset();
     });
 }
 
@@ -127,7 +82,6 @@ function loginSuccess(user) {
     playerProgress = user.progress;
     
     localStorage.setItem("arcade_verse_session", user.username);
-    
     document.getElementById("main-header").style.display = "flex";
     
     showView("hub-view");
@@ -135,7 +89,6 @@ function loginSuccess(user) {
     startArcadeMusic();
 }
 
-// BOTÃO: SAIR DA CONTA (Efeito de Desconexão Completa)
 function logoutUser() {
     stopArcadeMusic();
     localStorage.removeItem("arcade_verse_session");
@@ -147,24 +100,11 @@ function logoutUser() {
     
     document.getElementById("login-form").reset();
     document.getElementById("register-form").reset();
-    
     showView("auth-view");
 }
 
-// BOTÃO: TROCAR DE CONTA (Fecha painéis e foca o formulário de login imediatamente)
 function switchAccount() {
-    document.getElementById("user-menu-drawer").classList.remove("open");
     logoutUser();
-}
-
-function toggleAuthMode(mode) {
-    if (mode === 'register') {
-        document.getElementById("login-box").style.display = "none";
-        document.getElementById("register-box").style.display = "block";
-    } else {
-        document.getElementById("register-box").style.display = "none";
-        document.getElementById("login-box").style.display = "block";
-    }
 }
 
 function saveGameData() {
@@ -174,19 +114,143 @@ function saveGameData() {
         usersDatabase[userIndex].progress = playerProgress;
         localStorage.setItem("arcade_verse_users", JSON.stringify(usersDatabase));
     }
+}
+
+/* =========================================================================
+   GERENCIADOR DE INTERFACE (VIEWS & MENUS)
+   ========================================================================= */
+function showView(viewId) {
+    document.querySelectorAll(".view-section").forEach(view => view.style.display = "none");
+    document.getElementById(viewId).style.display = "block";
+}
+
+function toggleUserMenu() {
+    const drawer = document.getElementById("user-menu-drawer");
+    drawer.classList.toggle("open");
+}
+
+// Fecha o menu hambúrguer ao clicar fora dele
+document.addEventListener("click", (e) => {
+    const drawer = document.getElementById("user-menu-drawer");
+    const trigger = document.getElementById("hamburger-trigger");
+    if (drawer && drawer.classList.contains("open") && !drawer.contains(e.target) && !trigger.contains(e.target)) {
+        drawer.classList.remove("open");
+    }
+});
+
+function backToHub() {
+    playClickSound();
+    showView("hub-view");
     updateHubUI();
 }
 
-/* ==========================================
-   SISTEMA HUB & ENGINES DOS INTEGRANTES
-   ========================================== */
-function showView(viewId) {
-    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
-    document.getElementById(viewId).classList.add("active");
+function updateHubUI() {
+    if (!playerProgress.clicker) return;
+
+    let totalLevels = playerProgress.clicker.level + 
+                     playerProgress.memory.level + 
+                     playerProgress.math.level + 
+                     playerProgress.reaction.level + 
+                     playerProgress.stacker.level +
+                     (playerProgress.tictactoe ? playerProgress.tictactoe.level : 0);
+                     
+    let levelFinal = Math.max(0, totalLevels - 5);
+
+    document.getElementById("drawer-username").innerText = currentLoggedInUser;
+    document.getElementById("drawer-level").innerHTML = `<i class="fa-solid fa-crown"></i> Nível: ${levelFinal}`;
+
+    // Renderização Inteligente da Imagem de Perfil
+    const currentUserData = usersDatabase.find(u => u.username === currentLoggedInUser);
+    const imgElement = document.getElementById("profile-img");
+    const iconElement = document.getElementById("profile-icon");
+
+    if (currentUserData && currentUserData.avatar) {
+        imgElement.src = currentUserData.avatar;
+        imgElement.style.display = "block";
+        iconElement.style.display = "none";
+    } else {
+        imgElement.style.display = "none";
+        iconElement.style.display = "block";
+    }
+
+    // Atualização das Barras de Progresso da Hub
+    document.getElementById("hub-clicker-lvl").innerText = playerProgress.clicker.level;
+    let pct1 = (playerProgress.clicker.currentPoints / playerProgress.clicker.requiredPoints) * 100;
+    document.getElementById("hub-clicker-bar").style.width = `${Math.min(pct1, 100)}%`;
+
+    document.getElementById("hub-memory-lvl").innerText = playerProgress.memory.level;
+    document.getElementById("hub-memory-bar").style.width = `${Math.min((playerProgress.memory.level / 10) * 100, 100)}%`;
+
+    document.getElementById("hub-math-lvl").innerText = playerProgress.math.level;
+    document.getElementById("hub-math-bar").style.width = `${(playerProgress.math.streak / 5) * 100}%`;
+
+    document.getElementById("hub-reaction-lvl").innerText = playerProgress.reaction.level;
+    document.getElementById("hub-reaction-bar").style.width = playerProgress.reaction.bestTime < 9999 ? '100%' : '0%';
+
+    document.getElementById("hub-stacker-lvl").innerText = playerProgress.stacker.level;
+    document.getElementById("hub-stacker-bar").style.width = `${Math.min((playerProgress.stacker.topScore / 12) * 100, 100)}%`;
+
+    document.getElementById("hub-tictactoe-lvl").innerText = playerProgress.tictactoe ? playerProgress.tictactoe.level : 0;
+    document.getElementById("hub-tictactoe-bar").style.width = playerProgress.tictactoe ? `${Math.min(playerProgress.tictactoe.level * 10, 100)}%` : '0%';
 }
 
+/* =========================================================================
+   SISTEMA DE DOWNLOAD, COMPRESSÃO E UPLOAD DE AVATAR
+   ========================================================================= */
+function triggerAvatarUpload() {
+    document.getElementById("avatar-input").click();
+}
+
+function handleAvatarSelection(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.match('image.*')) {
+        alert("Por favor, selecione apenas arquivos de imagem!");
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            const targetSize = 150; 
+            
+            canvas.width = targetSize;
+            canvas.height = targetSize;
+            
+            let srcX = 0, srcY = 0, srcWidth = img.width, srcHeight = img.height;
+            if (img.width > img.height) {
+                srcWidth = img.height;
+                srcX = (img.width - img.height) / 2;
+            } else {
+                srcHeight = img.width;
+                srcY = (img.height - img.width) / 2;
+            }
+
+            ctx.drawImage(img, srcX, srcY, srcWidth, srcHeight, 0, 0, targetSize, targetSize);
+            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.75);
+            
+            const userIndex = usersDatabase.findIndex(u => u.username === currentLoggedInUser);
+            if (userIndex !== -1) {
+                usersDatabase[userIndex].avatar = compressedBase64;
+                localStorage.setItem("arcade_verse_users", JSON.stringify(usersDatabase));
+                updateHubUI();
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+/* =========================================================================
+   SISTEMA DE INICIALIZAÇÃO DE JOGOS
+   ========================================================================= */
 function launchGame(gameId) {
-    showView("game-view");
+    playClickSound();
+    showView("game-container-view");
     const stage = document.getElementById("game-stage");
     stage.innerHTML = ""; 
 
@@ -200,107 +264,52 @@ function launchGame(gameId) {
     }
 }
 
-function backToHub() {
-    document.getElementById("game-stage").innerHTML = "";
-    showView("hub-view");
-    updateHubUI();
-}
-
-function updateHubUI() {
-    if (!playerProgress.clicker) return;
-
-    let totalLevels = playerProgress.clicker.level + 
-                     playerProgress.memory.level + 
-                     playerProgress.math.level + 
-                     playerProgress.reaction.level + 
-                     playerProgress.stacker.level;
-                     
-    let levelFinal = totalLevels - 4;
-
-    // Atualiza dados de texto do Menu
-    document.getElementById("drawer-username").innerText = currentLoggedInUser;
-    document.getElementById("drawer-level").innerHTML = `<i class="fa-solid fa-crown"></i> Nível: ${levelFinal}`;
-
-    // =========================================================================
-    // BUSQUE POR ESTE TRECHO EXATO DENTRO DA FUNÇÃO updateHubUI() NO SCRIPT.JS
-    // =========================================================================
-    
-    // LÓGICA DE RENDERIZAÇÃO DA FOTO DE PERFIL
-    const currentUserData = usersDatabase.find(u => u.username === currentLoggedInUser);
-    const imgElement = document.getElementById("profile-img");
-    const iconElement = document.getElementById("profile-icon");
-    
-    if (currentUserData && currentUserData.avatar) {
-        imgElement.src = currentUserData.avatar;
-        imgElement.style.display = "block";   // Mostra a sua foto da galeria
-        iconElement.style.display = "none";    // <-- CORRIGIDO AQUI! Desaparece com o astronauta padrão
-    } else {
-        imgElement.style.display = "none";    // Esconde a tag de imagem vazia
-        iconElement.style.display = "block";   // Mantém o astronauta se não tiver foto
-    }
-    
-    // Atualiza as barras de progresso do Hub dos Jogos
-    document.getElementById("hub-clicker-lvl").innerText = playerProgress.clicker.level;
-    let pct1 = (playerProgress.clicker.currentPoints / playerProgress.clicker.requiredPoints) * 100;
-    document.getElementById("hub-clicker-bar").style.width = `${Math.min(pct1, 100)}%`;
-
-    document.getElementById("hub-memory-lvl").innerText = playerProgress.memory.level;
-    document.getElementById("hub-memory-bar").style.width = `${(playerProgress.memory.level / 10) * 100}%`;
-
-    document.getElementById("hub-math-lvl").innerText = playerProgress.math.level;
-    document.getElementById("hub-math-bar").style.width = `${(playerProgress.math.streak / 5) * 100}%`;
-
-    document.getElementById("hub-reaction-lvl").innerText = playerProgress.reaction.level;
-    document.getElementById("hub-reaction-bar").style.width = playerProgress.reaction.bestTime < 9999 ? '100%' : '0%';
-
-    document.getElementById("hub-stacker-lvl").innerText = playerProgress.stacker.level;
-    document.getElementById("hub-stacker-bar").style.width = `${(playerProgress.stacker.topScore / 12) * 100}%`;
-    
-    // Adicione isto junto com os outros atualizadores de progresso do Hub:
-    document.getElementById("hub-tictactoe-lvl").innerText = playerProgress.tictactoe ? playerProgress.tictactoe.level : 0;
-    document.getElementById("hub-tictactoe-bar").style.width = playerProgress.tictactoe ? `${Math.min(playerProgress.tictactoe.level * 10, 100)}%` : '0%';
-}
-
-// [JOGO 1] CLICKER ESTELAR
+/* -------------------------------------------------------------------------
+   [JOGO 1] CLICKER ESTELAR
+   ------------------------------------------------------------------------- */
 function buildClickerGame(stage) {
     document.getElementById("current-game-title").innerText = "Clicker Estelar";
-    const render = () => {
-        document.getElementById("game-current-stat").innerText = `Nível: ${playerProgress.clicker.level}`;
-        stage.innerHTML = `
-            <div class="score-display">Cristais: <strong>${playerProgress.clicker.currentPoints}</strong> / ${playerProgress.clicker.requiredPoints}</div>
-            <button class="clicker-btn" id="action-clicker"><i class="fa-solid fa-gem"></i></button>
-            <p style="margin-top:20px; color:var(--text-muted)">Minere energia clicando no cristal.</p>
-        `;
-        document.getElementById("action-clicker").addEventListener("click", () => {
-            playClickSound();
-            playerProgress.clicker.currentPoints += playerProgress.clicker.level * 2;
-            if(playerProgress.clicker.currentPoints >= playerProgress.clicker.requiredPoints) {
-                playerProgress.clicker.level += 1;
-                playerProgress.clicker.currentPoints = 0;
-                playerProgress.clicker.requiredPoints = Math.floor(playerProgress.clicker.requiredPoints * 1.6);
-                triggerLevelUpEffects();
-            }
-            saveGameData();
-            render();
-        });
-    };
-    render();
+    document.getElementById("game-current-stat").innerText = `Nível do Multiplicador: ${playerProgress.clicker.level}`;
+
+    stage.innerHTML = `
+        <div class="score-display">Energia Coletada: <span id="clicker-score">${playerProgress.clicker.currentPoints}</span> / <span id="clicker-req">${playerProgress.clicker.requiredPoints}</span></div>
+        <button class="btn-clicker-action" id="action-clicker"><i class="fa-solid fa-bolt"></i></button>
+    `;
+
+    document.getElementById("action-clicker").addEventListener("click", () => {
+        playClickSound();
+        playerProgress.clicker.currentPoints += playerProgress.clicker.level * 2;
+        
+        if(playerProgress.clicker.currentPoints >= playerProgress.clicker.requiredPoints) {
+            playerProgress.clicker.level += 1;
+            playerProgress.clicker.currentPoints = 0;
+            playerProgress.clicker.requiredPoints = Math.floor(playerProgress.clicker.requiredPoints * 1.6);
+            triggerLevelUpEffects();
+            document.getElementById("game-current-stat").innerText = `Nível do Multiplicador: ${playerProgress.clicker.level}`;
+        }
+        
+        document.getElementById("clicker-score").innerText = playerProgress.clicker.currentPoints;
+        document.getElementById("clicker-req").innerText = playerProgress.clicker.requiredPoints;
+        saveGameData();
+    });
 }
 
-// [JOGO 2] MEMÓRIA NEON
+/* -------------------------------------------------------------------------
+   [JOGO 2] MEMÓRIA NEON
+   ------------------------------------------------------------------------- */
 function buildMemoryGame(stage) {
     document.getElementById("current-game-title").innerText = "Memória Neon";
-    let lvl = playerProgress.memory.level;
-    document.getElementById("game-current-stat").innerText = `Fase: ${lvl}`;
+    document.getElementById("game-current-stat").innerText = `Dificuldade Atual: Nível ${playerProgress.memory.level}`;
 
-    let icons = ["🚀", "🛸", "👾", "⭐", "🔮", "🪐", "💎", "⚡"];
-    let pairsCount = lvl + 1 > 8 ? 8 : lvl + 1; 
-    let selectedIcons = icons.slice(0, pairsCount);
+    const iconsPool = ["fa-gem", "fa-ghost", "fa-bomb", "fa-shield-halved", "fa-skull", "fa-dragon", "fa-flask", "fa-clover"];
+    let pairsCount = Math.min(3 + Math.floor(playerProgress.memory.level / 2), 8);
+    
+    let selectedIcons = iconsPool.slice(0, pairsCount);
     let deck = [...selectedIcons, ...selectedIcons].sort(() => Math.random() - 0.5);
 
     stage.innerHTML = `
-        <div class="score-display">Encontre os pares neon correspondentes.</div>
-        <div class="memory-grid" style="grid-template-columns: repeat(${pairsCount <= 4 ? pairsCount : 4}, 1fr)"></div>
+        <div class="score-display">Encontre os pares ocultos</div>
+        <div class="memory-grid" style="grid-template-columns: repeat(${pairsCount > 4 ? 4 : pairsCount}, 1fr)"></div>
     `;
 
     const grid = stage.querySelector(".memory-grid");
@@ -311,9 +320,8 @@ function buildMemoryGame(stage) {
         const card = document.createElement("div");
         card.classList.add("memory-card");
         card.dataset.icon = icon;
-        card.innerText = icon;
-        grid.appendChild(card);
-
+        card.innerHTML = `<div class="front"><i class="fa-solid ${icon}"></i></div><div class="back"></div>`;
+        
         card.addEventListener("click", () => {
             if (flippedCards.length < 2 && !card.classList.contains("flipped") && !card.classList.contains("matched")) {
                 playClickSound();
@@ -323,8 +331,9 @@ function buildMemoryGame(stage) {
                 if (flippedCards.length === 2) {
                     if (flippedCards[0].dataset.icon === flippedCards[1].dataset.icon) {
                         flippedCards.forEach(c => c.classList.add("matched"));
-                        matchedPairs++;
                         flippedCards = [];
+                        matchedPairs++;
+
                         if (matchedPairs === pairsCount) {
                             playerProgress.memory.level += 1;
                             saveGameData();
@@ -342,39 +351,37 @@ function buildMemoryGame(stage) {
                 }
             }
         });
+        grid.appendChild(card);
     });
 }
 
-// [JOGO 3] MATEMÁTICA EXPRESS
+/* -------------------------------------------------------------------------
+   [JOGO 3] MATEMÁTICA EXPRESS
+   ------------------------------------------------------------------------- */
 function buildMathGame(stage) {
     document.getElementById("current-game-title").innerText = "Matemática Express";
-    let currentLvl = playerProgress.math.level;
-    document.getElementById("game-current-stat").innerText = `Nível: ${currentLvl}`;
+    document.getElementById("game-current-stat").innerText = `Nível de Conta: ${playerProgress.math.level}`;
 
-    let maxNum = currentLvl * 10;
-    let num1 = Math.floor(Math.random() * maxNum) + 1;
-    let num2 = Math.floor(Math.random() * maxNum) + 1;
-    let answer = num1 + num2;
+    let range = playerProgress.math.level * 10;
+    let n1 = Math.floor(Math.random() * range) + 1;
+    let n2 = Math.floor(Math.random() * range) + 1;
+    let operators = ['+', '-', '*'];
+    let op = operators[Math.floor(Math.random() * (playerProgress.math.level > 2 ? 3 : 2))];
 
-    let options = [answer, answer + 3, answer - 2, answer + Math.floor(Math.random() * 5) + 1];
-    options = [...new Set(options)].sort(() => Math.random() - 0.5); 
+    let answer = op === '+' ? n1 + n2 : op === '-' ? n1 - n2 : n1 * n2;
+    let options = [answer, answer + Math.floor(Math.random() * 5) + 1, answer - Math.floor(Math.random() * 5) - 1].sort(() => Math.random() - 0.5);
 
     stage.innerHTML = `
-        <div class="math-box">
-            <div class="score-display">Sequência de acertos: <strong>${playerProgress.math.streak}</strong>/5</div>
-            <div class="equation">${num1} + ${num2}</div>
-            <div class="math-options"></div>
+        <div class="score-display">Combo Acertos: ${playerProgress.math.streak} / 5</div>
+        <div class="math-question">${n1} ${op} ${n2} = ?</div>
+        <div class="math-options-container">
+            ${options.map(opt => `<button class="btn-math-option" data-val="${opt}">${opt}</button>`).join('')}
         </div>
     `;
 
-    const optContainer = stage.querySelector(".math-options");
-    options.forEach(opt => {
-        const btn = document.createElement("button");
-        btn.classList.add("btn-opt");
-        btn.innerText = opt;
-        optContainer.appendChild(btn);
-
+    stage.querySelectorAll(".btn-math-option").forEach(btn => {
         btn.addEventListener("click", () => {
+            let opt = parseInt(btn.getAttribute("data-val"));
             if(opt === answer) {
                 playClickSound();
                 playerProgress.math.streak += 1;
@@ -385,7 +392,7 @@ function buildMathGame(stage) {
                 }
             } else {
                 playGameOverSound();
-                playerProgress.math.streak = 0; 
+                playerProgress.math.streak = 0;
                 alert("Errado! Sequência resetada.");
             }
             saveGameData();
@@ -394,528 +401,82 @@ function buildMathGame(stage) {
     });
 }
 
-// [JOGO 4] REFLEXO NINJA
+/* -------------------------------------------------------------------------
+   [JOGO 4] REFLEXO NINJA
+   ------------------------------------------------------------------------- */
 function buildReactionGame(stage) {
     document.getElementById("current-game-title").innerText = "Reflexo Ninja";
-    let best = playerProgress.reaction.bestTime;
-    document.getElementById("game-current-stat").innerText = `Ranking: Nív. ${playerProgress.reaction.level}`;
+    let displayTime = playerProgress.reaction.bestTime === 9999 ? "Nenhum" : `${playerProgress.reaction.bestTime}ms`;
+    document.getElementById("game-current-stat").innerText = `Melhor Tempo: ${displayTime}`;
 
     stage.innerHTML = `
-        <div class="score-display">Melhor tempo: ${best === 9999 ? '0ms' : best + 'ms'}</div>
-        <div id="click-zone" class="reaction-zone zone-waiting">CLIQUE PARA COMEÇAR</div>
+        <div class="score-display">Espere o painel ficar verde e clique o mais rápido possível!</div>
+        <div id="reaction-zone" class="zone-action zone-waiting">AGUARDE...</div>
     `;
 
-    const zone = document.getElementById("click-zone");
-    let state = "idle"; 
-    let timeoutId;
-    let startTime;
+    const zone = document.getElementById("reaction-zone");
+    let state = "waiting"; 
+    let startTime, timeoutId;
+
+    let delay = Math.random() * 3000 + 2000;
+    timeoutId = setTimeout(() => {
+        state = "ready";
+        zone.innerText = "CLIQUE AGORA!";
+        zone.classList.replace("zone-waiting", "zone-result");
+        startTime = window.performance.now();
+    }, delay);
 
     zone.addEventListener("click", () => {
         if (state === "idle") {
             playClickSound();
-            zone.classList.replace("zone-waiting", "zone-result");
-            zone.innerText = "AGUARDE O SINAL VERDE...";
-            state = "waiting";
-
-            timeoutId = setTimeout(() => {
-                zone.classList.replace("zone-result", "zone-ready");
-                zone.innerText = "CLIQUE AGORA!!!";
-                state = "ready";
-                startTime = window.performance.now();
-            }, Math.random() * 2500 + 1200);
-
+            buildReactionGame(stage);
         } else if (state === "waiting") {
-            playGameOverSound();
             clearTimeout(timeoutId);
-            zone.classList.replace("zone-result", "zone-waiting");
-            zone.innerText = "MUITO CEDO! Tente de novo.";
+            playGameOverSound();
             state = "idle";
-
+            zone.innerText = "MUITO CEDO! Clique para tentar novamente.";
+            zone.classList.replace("zone-waiting", "zone-early");
         } else if (state === "ready") {
             playClickSound();
             let reactionTime = Math.round(window.performance.now() - startTime);
             state = "idle";
-
+            
             if(reactionTime < playerProgress.reaction.bestTime) {
                 playerProgress.reaction.bestTime = reactionTime;
                 playerProgress.reaction.level += 1;
                 triggerLevelUpEffects();
                 saveGameData();
             }
-            zone.className = "reaction-zone zone-result";
-            zone.innerHTML = `Tempo: <strong>${reactionTime}ms</strong><br><br>Clique para jogar de novo.`;
+            zone.innerText = `Seu tempo: ${reactionTime}ms! Clique para reiniciar.`;
         }
     });
 }
 
-// [JOGO 5] EMPILHADOR MODERNO
+/* -------------------------------------------------------------------------
+   [JOGO 5] EMPILHADOR MODERNO
+   ------------------------------------------------------------------------- */
 function buildStackerGame(stage) {
     document.getElementById("current-game-title").innerText = "Empilhador Moderno";
-    document.getElementById("game-current-stat").innerText = `Andar Max: ${playerProgress.stacker.level}`;
+    document.getElementById("game-current-stat").innerText = `Recorde de Blocos: ${playerProgress.stacker.topScore}`;
 
     stage.innerHTML = `
-        <div class="score-display">Recorde: ${playerProgress.stacker.topScore} andares</div>
-        <div class="stacker-container" id="st-container"></div>
-        <button class="btn-stack" id="st-drop">EMPILHAR</button>
+        <div class="score-display">Andar Atual: <span id="stack-floor">1</span> / 12</div>
+        <div class="stacker-frame">
+            <div id="stacker-arena"></div>
+        </div>
+        <button class="btn-stack" id="btn-stack-drop">SOLTAR BLOCO</button>
     `;
 
-    const container = document.getElementById("st-container");
-    const dropBtn = document.getElementById("st-drop");
-    
-    let currentFloor = 0;
-    let blockWidth = 100;
-    let blockSpeed = 4; 
-    let direction = 1;
+    const arena = document.getElementById("stacker-arena");
+    const dropBtn = document.getElementById("btn-stack-drop");
+
+    let currentFloor = 1;
     let blockPosition = 0;
+    let direction = 1; 
+    let blockSpeed = 15;
+    let lastLeft = 60; 
     let gameInterval;
-    let lastLeft = 100; 
-    
-    const baseBlock = document.createElement("div");
-    baseBlock.classList.add("stacker-block");
-    baseBlock.style.width = `${blockWidth}px`;
-    baseBlock.style.bottom = "0px";
-    baseBlock.style.left = `${lastLeft}px`;
-    container.appendChild(baseBlock);
 
     function spawnNextBlock() {
-        currentFloor++;
-        if (currentFloor > 12) { 
-            playerProgress.stacker.level += 1;
-            saveGameData();
-            clearInterval(gameInterval);
-            triggerLevelUpEffects();
-            buildStackerGame(stage);
-            return;
-        }
-
-        const block = document.createElement("div");
-        block.classList.add("stacker-block");
-        block.style.width = `${blockWidth}px`;
-        block.style.bottom = `${currentFloor * 24}px`;
-        block.style.left = "0px";
-        container.appendChild(block);
-
-        blockPosition = 0;
-        direction = 1; 
-        
-        clearInterval(gameInterval);
-        gameInterval = setInterval(() => {
-            blockPosition += direction * blockSpeed;
-            if (blockPosition + blockWidth >= 280) {
-                blockPosition = 280 - blockWidth;
-                direction = -1; 
-            } else if (blockPosition <= 0) {
-                blockPosition = 0;
-                direction = 1;  
-            }
-            block.style.left = `${blockPosition}px`;
-        }, 20);
-    }
-
-    spawnNextBlock();
-
-    dropBtn.addEventListener("click", () => {
-        clearInterval(gameInterval); 
-        const tolerancia = 18;
-        const diferenca = Math.abs(blockPosition - lastLeft);
-
-        if (diferenca > tolerancia) {
-            playGameOverSound();
-            alert(`Fim de jogo! Desalinhado no andar ${currentFloor}.`);
-            if ((currentFloor - 1) > playerProgress.stacker.topScore) {
-                playerProgress.stacker.topScore = currentFloor - 1;
-                playerProgress.stacker.level = Math.floor((currentFloor - 1) / 3) + 1;
-                saveGameData();
-            }
-            buildStackerGame(stage);
-            return;
-        }
-
-        playClickSound();
-        lastLeft = blockPosition; 
-        blockSpeed += 0.5; 
-        spawnNextBlock();
-    });
-}
-
-/* ==========================================
-   SISTEMA DE DOWNLOAD, COMPRESSÃO E UPLOAD DE AVATAR
-   ========================================== */
-
-// Força o clique no input oculto de arquivos abrindo a galeria nativa
-function triggerAvatarUpload() {
-    document.getElementById("avatar-input").click();
-}
-
-// Gerencia o arquivo selecionado após a permissão do usuário
-function handleAvatarSelection(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    // Garante que o arquivo de fato é uma imagem
-    if (!file.type.match('image.*')) {
-        alert("Por favor, selecione apenas arquivos de imagem!");
-        return;
-    }
-
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        const img = new Image();
-        
-        img.onload = function() {
-            // Cria um Canvas para redimensionar a imagem e economizar memória no LocalStorage
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            
-            // Força o tamanho do avatar para um quadrado perfeito leve
-            const targetSize = 150; 
-            canvas.width = targetSize;
-            canvas.height = targetSize;
-            
-            // Corta e centraliza a imagem no formato quadrado antes de desenhar
-            let srcX = 0, srcY = 0, srcWidth = img.width, srcHeight = img.height;
-            if (img.width > img.height) {
-                srcWidth = img.height;
-                srcX = (img.width - img.height) / 2;
-            } else {
-                srcHeight = img.width;
-                srcY = (img.height - img.width) / 2;
-            }
-
-            ctx.drawImage(img, srcX, srcY, srcWidth, srcHeight, 0, 0, targetSize, targetSize);
-            
-            // Converte o resultado para string compactada (JPG com 75% de qualidade)
-            const compressedBase64 = canvas.toDataURL("image/jpeg", 0.75);
-            
-            // Grava diretamente no registro do usuário logado dentro do banco global
-            const userIndex = usersDatabase.findIndex(u => u.username === currentLoggedInUser);
-            if (userIndex !== -1) {
-                usersDatabase[userIndex].avatar = compressedBase64;
-                localStorage.setItem("arcade_verse_users", JSON.stringify(usersDatabase));
-                
-                // Atualiza a interface em tempo real
-                updateHubUI();
-            }
-        };
-        
-        img.src = e.target.result;
-    };
-
-    reader.readAsDataURL(file);
-}
-
-// [JOGO 6] IA SUPREMA - JOGO DA VELHA MINIMAX IMMORTAL
-function buildTicTacToeGame(stage) {
-    document.getElementById("current-game-title").innerText = "IA Suprema (Velha)";
-    if(!playerProgress.tictactoe) playerProgress.tictactoe = { level: 0 };
-    
-    document.getElementById("game-current-stat").innerText = `Pontos: ${playerProgress.tictactoe.level}`;
-
-    // Estado interno do Tabuleiro: 'X' (Player), 'O' (IA), '' (Vazio)
-    let board = ['', '', '', '', '', '', '', '', ''];
-    let isGameActive = true;
-
-    stage.innerHTML = `
-        <div class="score-display" id="ttt-status">Sua vez! Humano (X) vs IA (O)</div>
-        <div class="ttt-board">
-            ${board.map((_, i) => `<div class="ttt-cell" data-index="${i}"></div>`).join('')}
-        </div>
-    `;
-
-    const cells = stage.querySelectorAll(".ttt-cell");
-    const statusText = document.getElementById("ttt-status");
-
-    const winConditions = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8], // Linhas
-        [0, 3, 6], [1, 4, 7], [2, 5, 8], // Colunas
-        [0, 4, 8], [2, 4, 6]             // Diagonais
-    ];
-
-    // Checa vencedor no estado atual
-    function checkWinner(currentBoard) {
-        for (let condition of winConditions) {
-            const [a, b, c] = condition;
-            if (currentBoard[a] && currentBoard[a] === currentBoard[b] && currentBoard[a] === currentBoard[c]) {
-                return currentBoard[a];
-            }
-        }
-        if (!currentBoard.includes('')) return 'tie';
-        return null;
-    }
-
-    // ALGORITMO MINIMAX: Avalia recursivamente todas as jogadas possíveis
-    function minimax(currentBoard, depth, isMaximizing) {
-        let result = checkWinner(currentBoard);
-        if (result === 'O') return 10 - depth; // IA ganha (quanto mais rápido melhor)
-        if (result === 'X') return depth - 10; // Player ganha
-        if (result === 'tie') return 0;        // Empate
-
-        if (isMaximizing) {
-            let bestScore = -Infinity;
-            for (let i = 0; i < 9; i++) {
-                if (currentBoard[i] === '') {
-                    currentBoard[i] = 'O';
-                    let score = minimax(currentBoard, depth + 1, false);
-                    currentBoard[i] = '';
-                    bestScore = Math.max(score, bestScore);
-                }
-            }
-            return bestScore;
-        } else {
-            let bestScore = Infinity;
-            for (let i = 0; i < 9; i++) {
-                if (currentBoard[i] === '') {
-                    currentBoard[i] = 'X';
-                    let score = minimax(currentBoard, depth + 1, true);
-                    currentBoard[i] = '';
-                    bestScore = Math.min(score, bestScore);
-                }
-            }
-            return bestScore;
-        }
-    }
-
-    // Encontra a melhor casa disponível para a Inteligência Artificial
-    function getBestMove() {
-        let bestScore = -Infinity;
-        let move = null;
-
-        for (let i = 0; i < 9; i++) {
-            if (board[i] === '') {
-                board[i] = 'O';
-                let score = minimax(board, 0, false);
-                board[i] = '';
-                if (score > bestScore) {
-                    bestScore = score;
-                    move = i;
-                }
-            }
-        }
-        return move;
-    }
-
-    function handleCellClick(e) {
-        const index = parseInt(e.target.getAttribute("data-index"));
-
-        if (board[index] !== '' || !isGameActive) return;
-
-        // Rodada do Jogador
-        playClickSound();
-        board[index] = 'X';
-        e.target.innerText = 'X';
-        e.target.classList.add("player-x");
-
-        if (evaluateGameStatus()) return;
-
-        // Rodada da IA Computacional
-        statusText.innerText = "IA pensando...";
-        isGameActive = false; // Bloqueia cliques temporariamente
-
-        setTimeout(() => {
-            let aiMove = getBestMove();
-            if (aiMove !== null) {
-                playClickSound();
-                board[aiMove] = 'O';
-                const aiCell = cells[aiMove];
-                aiCell.innerText = 'O';
-                aiCell.classList.add("ai-o");
-            }
-            
-            isGameActive = true;
-            evaluateGameStatus();
-        }, 400);
-    }
-
-    function evaluateGameStatus() {
-        let winner = checkWinner(board);
-
-        if (winner) {
-            isGameActive = false;
-            if (winner === 'O') {
-                playGameOverSound();
-                statusText.innerHTML = `<span style="color:var(--accent)">A IA VENCEU! Humano derrotado.</span>`;
-            } else if (winner === 'X') {
-                playClickSound();
-                statusText.innerHTML = `<span style="color:#38ef7d">MILAGRE! Você venceu a IA.</span>`;
-                playerProgress.tictactoe.level += 3; // Recompensa massiva
-                triggerLevelUpEffects();
-            } else {
-                statusText.innerHTML = `<span style="color:var(--text-muted)">EMPATE! Você resistiu perfeitamente.</span>`;
-                playerProgress.tictactoe.level += 1; // Empatar com essa IA já é um mérito!
-            }
-            saveGameData();
-            
-            // Botão para reiniciar a partida
-            stage.innerHTML += `<button class="btn-stack" id="btn-restart-ttt" style="background:var(--secondary); margin-top:20px;">Jogar Novamente</button>`;
-            document.getElementById("btn-restart-ttt").addEventListener("click", () => buildTicTacToeGame(stage));
-            return true;
-        }
-        
-        if (isGameActive) {
-            statusText.innerText = "Sua vez! Faça sua jogada.";
-        }
-        return false;
-    }
-
-    cells.forEach(cell => cell.addEventListener("click", handleCellClick));
-}
-
-/* ==========================================
-   SISTEMA DE ÁUDIO ATUALIZADO (VISIBILIDADE E EFEITOS)
-   ========================================== */
-let audioCtx = null;
-let musicInterval = null;
-let isMusicPlaying = false; // Controla o estado desejado da música
-
-function startArcadeMusic() {
-    isMusicPlaying = true;
-    if (audioCtx || musicInterval) return;
-
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    function playTone(freq, duration, type = "square", volume = 0.05) {
-        if (!audioCtx || audioCtx.state === 'suspended') return;
-        
-        const osc = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        
-        osc.type = type;
-        osc.frequency.value = freq;
-        
-        gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
-        
-        osc.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        
-        osc.start();
-        osc.stop(audioCtx.currentTime + duration);
-    }
-
-    const melody = [
-        329.63, 392.00, 659.25, 523.25, 587.33, 783.99, 0, 392.00,
-        440.00, 523.25, 698.46, 587.33, 523.25, 493.88, 392.00, 440.00
-    ];
-    
-    let noteIndex = 0;
-
-    musicInterval = setInterval(() => {
-        // Se o navegador suspendeu o áudio por falta de clique, pula a nota para não acumular erro
-        if (audioCtx && audioCtx.state === 'suspended') return;
-
-        let currentNote = melody[noteIndex];
-        if (currentNote > 0) {
-            let waveType = noteIndex % 4 === 0 ? "triangle" : "square";
-            playTone(currentNote, 0.25, waveType, 0.02);
-        }
-        noteIndex = (noteIndex + 1) % melody.length;
-    }, 150);
-
-    // 🔥 SOLUÇÃO PARA O F5: Escuta o primeiro clique na tela para destravar o som caso o Chrome tenha bloqueado
-    const unlockAudio = () => {
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume().then(() => {
-                // Remove o evento depois que funcionou para não gastar memória
-                document.removeEventListener('click', unlockAudio);
-                document.removeEventListener('keydown', unlockAudio);
-            });
-        }
-    };
-    document.addEventListener('click', unlockAudio);
-    document.addEventListener('keydown', unlockAudio);
-}
-
-function stopArcadeMusic() {
-    isMusicPlaying = false;
-    if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
-    if (audioCtx) { audioCtx.close().then(() => { audioCtx = null; }); }
-}
-
-// 🔊 EFEITO 1: Barulho de clique do botão (Rápido e agudo)
-function playClickSound() {
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(1200, audioCtx.currentTime); // Tom alto/agudo
-    gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05); // Muito rápido
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.06);
-}
-
-// 💥 EFEITO 2: Som de Erro ou Derrota (Grave com queda de frequência)
-function playGameOverSound() {
-    if (!audioCtx) return;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = "sawtooth"; // Som mais agressivo de arcade
-    osc.frequency.setValueAtTime(220, audioCtx.currentTime); // Começa grave
-    osc.frequency.linearRampToValueAtTime(80, audioCtx.currentTime + 0.4); // Desce o tom dramaticamente
-    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.5);
-}
-
-// 🏆 EFEITO 3: Som de Vitória / Subiu de Nível (Notas rápidas e ascendentes)
-function playVictorySound() {
-    if (!audioCtx) return;
-    
-    // Toca uma sequência rápida de 3 notas para criar o clima de conquista
-    const now = audioCtx.currentTime;
-    const notes = [523.25, 659.25, 783.99, 1046.50]; // Notas Dó, Mi, Sol, Dó (Mais agudo)
-    
-    notes.forEach((freq, index) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        
-        osc.type = "triangle"; // Som mais suave e limpo para a vitória
-        osc.frequency.setValueAtTime(freq, now + (index * 0.08)); // Toca uma depois da outra
-        
-        gain.gain.setValueAtTime(0.06, now + (index * 0.08));
-        gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.08) + 0.15);
-        
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        
-        osc.start(now + (index * 0.08));
-        osc.stop(now + (index * 0.08) + 0.16);
-    });
-}
-
-// 🎉 FUNÇÃO DISPARADORA DE CONQUISTA (Som + Confetes)
-function triggerLevelUpEffects() {
-    playVictorySound();
-    
-    // Dispara confetes usando a biblioteca importada
-    confetti({
-        particleCount: 100, // Quantidade de confetes
-        spread: 70,         // Ângulo da explosão
-        origin: { y: 0.6 }  // Altura de onde eles saem (0.6 = meio da tela para baixo)
-    });
-}
-
-// 🚪 CONTROLE DE VISIBILIDADE: Para o som ao sair do Chrome ou editores
-document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-        // Se o usuário saiu da aba, pausa temporariamente o canal de áudio
-        if (audioCtx && audioCtx.state === 'running') {
-            audioCtx.suspend();
-        }
-    } else {
-        // Se o usuário voltou e ele ESTÁ logado (isMusicPlaying ativo), retoma o áudio
-        if (isMusicPlaying) {
-            if (!audioCtx) {
-                startArcadeMusic();
-            } else if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
-        }
-    }
-});
+        document.getElementById("stack-floor").innerText = currentFloor;
+           
