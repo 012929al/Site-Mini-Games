@@ -801,15 +801,29 @@ function startArcadeMusic() {
     let noteIndex = 0;
 
     musicInterval = setInterval(() => {
+        // Se o navegador suspendeu o áudio por falta de clique, pula a nota para não acumular erro
         if (audioCtx && audioCtx.state === 'suspended') return;
 
         let currentNote = melody[noteIndex];
         if (currentNote > 0) {
             let waveType = noteIndex % 4 === 0 ? "triangle" : "square";
-            playTone(currentNote, 0.25, waveType, 0.02); // Volume levemente reduzido para focar nos efeitos
+            playTone(currentNote, 0.25, waveType, 0.02);
         }
         noteIndex = (noteIndex + 1) % melody.length;
     }, 150);
+
+    // 🔥 SOLUÇÃO PARA O F5: Escuta o primeiro clique na tela para destravar o som caso o Chrome tenha bloqueado
+    const unlockAudio = () => {
+        if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume().then(() => {
+                // Remove o evento depois que funcionou para não gastar memória
+                document.removeEventListener('click', unlockAudio);
+                document.removeEventListener('keydown', unlockAudio);
+            });
+        }
+    };
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('keydown', unlockAudio);
 }
 
 function stopArcadeMusic() {
