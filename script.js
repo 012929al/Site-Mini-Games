@@ -495,15 +495,6 @@ function buildStackerGame(stage) {
         /* =========================================================================
    SISTEMA COGNITIVO DE FEEDBACK, CHAT E SUGESTÕES GERAIS
    ========================================================================= */
-
-// Inicializa os bancos de dados compartilhados no localStorage se não existirem
-if (!localStorage.getItem("arcade_verse_feedback")) {
-    localStorage.setItem("arcade_verse_feedback", JSON.stringify({}));
-}
-if (!localStorage.getItem("arcade_verse_suggestions")) {
-    localStorage.setItem("arcade_verse_suggestions", JSON.stringify([]));
-}
-
 // Carrega os dados de Feedback (Likes e Comentários) do Jogo Aberto
 function loadGameFeedbackUI() {
     if (!currentGameId) return;
