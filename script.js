@@ -1,9 +1,10 @@
 /* =========================================================================
-   BANCO DE DADOS LOCAL E CONFIGURAÇÕES INICIAIS (CORRIGIDO)
+   BANCO DE DADOS LOCAL E CONFIGURAÇÕES INICIAIS (BLINDADO)
    ========================================================================= */
 let usersDatabase = [];
 let currentLoggedInUser = null;
 let playerProgress = {};
+let currentGameId = ""; 
 
 const defaultProgress = {
     clicker: { level: 1, currentPoints: 0, requiredPoints: 50 },
@@ -16,7 +17,7 @@ const defaultProgress = {
 
 // Inicialização segura do sistema
 document.addEventListener("DOMContentLoaded", () => {
-    // Garante a criação dos storages de feedback antes de verificar o login
+    // Inicializa as bases do localStorage antes de rodar os validadores de tela
     if (!localStorage.getItem("arcade_verse_feedback")) {
         localStorage.setItem("arcade_verse_feedback", JSON.stringify({}));
     }
@@ -41,61 +42,69 @@ function loadAuthSystem() {
         }
     }
     showView("auth-view");
-    document.getElementById("main-header").style.display = "none";
+    const header = document.getElementById("main-header");
+    if (header) header.style.display = "none";
 }
 
 function setupAuthEvents() {
-    // Formulário de Login
-    document.getElementById("login-form").addEventListener("submit", (e) => {
-        e.preventDefault();
-        const userIn = document.getElementById("login-user").value.trim();
-        const passIn = document.getElementById("login-pass").value;
+    const loginForm = document.getElementById("login-form");
+    const registerForm = document.getElementById("register-form");
 
-        const user = usersDatabase.find(u => u.username === userIn && u.password === passIn);
-        if (user) {
-            loginSuccess(user);
-        } else {
-            alert("Usuário ou senha incorretos!");
-        }
-    });
+    if (loginForm) {
+        loginForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const userIn = document.getElementById("login-user").value.trim();
+            const passIn = document.getElementById("login-pass").value;
 
-    // Formulário de Registro
-    document.getElementById("register-form").addEventListener("submit", (e) => {
-        e.preventDefault();
-        const userIn = document.getElementById("reg-user").value.trim();
-        const passIn = document.getElementById("reg-pass").value;
+            const user = usersDatabase.find(u => u.username === userIn && u.password === passIn);
+            if (user) {
+                loginSuccess(user);
+            } else {
+                alert("Usuário ou senha incorretos!");
+            }
+        });
+    }
 
-        if (userIn.length < 3) return alert("O usuário deve ter ao menos 3 caracteres.");
-        if (passIn.length < 4) return alert("A senha deve ter ao menos 4 caracteres.");
+    if (registerForm) {
+        registerForm.addEventListener("submit", (e) => {
+            e.preventDefault();
+            const userIn = document.getElementById("reg-user").value.trim();
+            const passIn = document.getElementById("reg-pass").value;
 
-        const existing = usersDatabase.find(u => u.username === userIn);
-        if (existing) return alert("Esse nome de usuário já está em uso!");
+            if (userIn.length < 3) return alert("O usuário deve ter ao menos 3 caracteres.");
+            if (passIn.length < 4) return alert("A senha deve ter ao menos 4 caracteres.");
 
-        const newUser = {
-            username: userIn,
-            password: passIn,
-            avatar: null,
-            progress: JSON.parse(JSON.stringify(defaultProgress))
-        };
+            const existing = usersDatabase.find(u => u.username === userIn);
+            if (existing) return alert("Esse nome de usuário já está em uso!");
 
-        usersDatabase.push(newUser);
-        localStorage.setItem("arcade_verse_users", JSON.stringify(usersDatabase));
-        alert("Conta criada com sucesso! Faça o login.");
-        document.getElementById("register-form").reset();
-    });
+            const newUser = {
+                username: userIn,
+                password: passIn,
+                avatar: null,
+                progress: JSON.parse(JSON.stringify(defaultProgress))
+            };
+
+            usersDatabase.push(newUser);
+            localStorage.setItem("arcade_verse_users", JSON.stringify(usersDatabase));
+            alert("Conta criada com sucesso! Faça o login.");
+            registerForm.reset();
+        });
+    }
 }
 
 function loginSuccess(user) {
     currentLoggedInUser = user.username;
-    playerProgress = user.progress;
+    playerProgress = user.progress || JSON.parse(JSON.stringify(defaultProgress));
     
     localStorage.setItem("arcade_verse_session", user.username);
-    document.getElementById("main-header").style.display = "flex";
+    
+    const header = document.getElementById("main-header");
+    if (header) header.style.display = "flex";
     
     showView("hub-view");
     updateHubUI();
-    startArcadeMusic();
     renderSuggestions();
+    startArcadeMusic();
 }
 
 function logoutUser() {
@@ -104,11 +113,16 @@ function logoutUser() {
     currentLoggedInUser = null;
     playerProgress = {};
     
-    document.getElementById("user-menu-drawer").classList.remove("open");
-    document.getElementById("main-header").style.display = "none";
+    const drawer = document.getElementById("user-menu-drawer");
+    const header = document.getElementById("main-header");
+    const loginForm = document.getElementById("login-form");
+    const registerForm = document.getElementById("register-form");
+
+    if (drawer) drawer.classList.remove("open");
+    if (header) header.style.display = "none";
+    if (loginForm) loginForm.reset();
+    if (registerForm) registerForm.reset();
     
-    document.getElementById("login-form").reset();
-    document.getElementById("register-form").reset();
     showView("auth-view");
 }
 
@@ -130,19 +144,19 @@ function saveGameData() {
    ========================================================================= */
 function showView(viewId) {
     document.querySelectorAll(".view-section").forEach(view => view.style.display = "none");
-    document.getElementById(viewId).style.display = "block";
+    const targetView = document.getElementById(viewId);
+    if (targetView) targetView.style.display = "block";
 }
 
 function toggleUserMenu() {
     const drawer = document.getElementById("user-menu-drawer");
-    drawer.classList.toggle("open");
+    if (drawer) drawer.classList.toggle("open");
 }
 
-// Fecha o menu hambúrguer ao clicar fora dele
 document.addEventListener("click", (e) => {
     const drawer = document.getElementById("user-menu-drawer");
     const trigger = document.getElementById("hamburger-trigger");
-    if (drawer && drawer.classList.contains("open") && !drawer.contains(e.target) && !trigger.contains(e.target)) {
+    if (drawer && drawer.classList.contains("open") && !drawer.contains(e.target) && trigger && !trigger.contains(e.target)) {
         drawer.classList.remove("open");
     }
 });
@@ -156,58 +170,83 @@ function backToHub() {
 function updateHubUI() {
     if (!playerProgress.clicker) return;
 
-    let totalLevels = playerProgress.clicker.level + 
-                     playerProgress.memory.level + 
-                     playerProgress.math.level + 
-                     playerProgress.reaction.level + 
-                     playerProgress.stacker.level +
+    let totalLevels = (playerProgress.clicker.level || 1) + 
+                     (playerProgress.memory.level || 1) + 
+                     (playerProgress.math.level || 1) + 
+                     (playerProgress.reaction.level || 1) + 
+                     (playerProgress.stacker.level || 1) +
                      (playerProgress.tictactoe ? playerProgress.tictactoe.level : 0);
                      
     let levelFinal = Math.max(0, totalLevels - 5);
 
-    document.getElementById("drawer-username").innerText = currentLoggedInUser;
-    document.getElementById("drawer-level").innerHTML = `<i class="fa-solid fa-crown"></i> Nível: ${levelFinal}`;
+    const dUser = document.getElementById("drawer-username");
+    const dLvl = document.getElementById("drawer-level");
+    if (dUser) dUser.innerText = currentLoggedInUser;
+    if (dLvl) dLvl.innerHTML = `<i class="fa-solid fa-crown"></i> Nível: ${levelFinal}`;
 
-    // Renderização Inteligente da Imagem de Perfil
     const currentUserData = usersDatabase.find(u => u.username === currentLoggedInUser);
     const imgElement = document.getElementById("profile-img");
     const iconElement = document.getElementById("profile-icon");
 
-    if (currentUserData && currentUserData.avatar) {
-        imgElement.src = currentUserData.avatar;
-        imgElement.style.display = "block";
-        iconElement.style.display = "none";
-    } else {
-        imgElement.style.display = "none";
-        iconElement.style.display = "block";
+    if (imgElement && iconElement) {
+        if (currentUserData && currentUserData.avatar) {
+            imgElement.src = currentUserData.avatar;
+            imgElement.style.display = "block";
+            iconElement.style.display = "none";
+        } else {
+            imgElement.style.display = "none";
+            iconElement.style.display = "block";
+        }
     }
 
-    // Atualização das Barras de Progresso da Hub
-    document.getElementById("hub-clicker-lvl").innerText = playerProgress.clicker.level;
-    let pct1 = (playerProgress.clicker.currentPoints / playerProgress.clicker.requiredPoints) * 100;
-    document.getElementById("hub-clicker-bar").style.width = `${Math.min(pct1, 100)}%`;
+    // Atualização Segura das Barras da Hub
+    const hClickerLvl = document.getElementById("hub-clicker-lvl");
+    const hClickerBar = document.getElementById("hub-clicker-bar");
+    if (hClickerLvl && hClickerBar) {
+        hClickerLvl.innerText = playerProgress.clicker.level;
+        let pct = (playerProgress.clicker.currentPoints / playerProgress.clicker.requiredPoints) * 100;
+        hClickerBar.style.width = `${Math.min(pct, 100)}%`;
+    }
 
-    document.getElementById("hub-memory-lvl").innerText = playerProgress.memory.level;
-    document.getElementById("hub-memory-bar").style.width = `${Math.min((playerProgress.memory.level / 10) * 100, 100)}%`;
+    const hMemoryLvl = document.getElementById("hub-memory-lvl");
+    const hMemoryBar = document.getElementById("hub-memory-bar");
+    if (hMemoryLvl && hMemoryBar) {
+        hMemoryLvl.innerText = playerProgress.memory.level;
+        hMemoryBar.style.width = `${Math.min((playerProgress.memory.level / 10) * 100, 100)}%`;
+    }
 
-    document.getElementById("hub-math-lvl").innerText = playerProgress.math.level;
-    document.getElementById("hub-math-bar").style.width = `${(playerProgress.math.streak / 5) * 100}%`;
+    const hMathLvl = document.getElementById("hub-math-lvl");
+    const hMathBar = document.getElementById("hub-math-bar");
+    if (hMathLvl && hMathBar) {
+        hMathLvl.innerText = playerProgress.math.level;
+        hMathBar.style.width = `${(playerProgress.math.streak / 5) * 100}%`;
+    }
 
-    document.getElementById("hub-reaction-lvl").innerText = playerProgress.reaction.level;
-    document.getElementById("hub-reaction-bar").style.width = playerProgress.reaction.bestTime < 9999 ? '100%' : '0%';
+    const hReactionLvl = document.getElementById("hub-reaction-lvl");
+    const hReactionBar = document.getElementById("hub-reaction-bar");
+    if (hReactionLvl && hReactionBar) {
+        hReactionLvl.innerText = playerProgress.reaction.level;
+        hReactionBar.style.width = playerProgress.reaction.bestTime < 9999 ? '100%' : '0%';
+    }
 
-    document.getElementById("hub-stacker-lvl").innerText = playerProgress.stacker.level;
-    document.getElementById("hub-stacker-bar").style.width = `${Math.min((playerProgress.stacker.topScore / 12) * 100, 100)}%`;
+    const hStackerLvl = document.getElementById("hub-stacker-lvl");
+    const hStackerBar = document.getElementById("hub-stacker-bar");
+    if (hStackerLvl && hStackerBar) {
+        hStackerLvl.innerText = playerProgress.stacker.level;
+        hStackerBar.style.width = `${Math.min((playerProgress.stacker.topScore / 12) * 100, 100)}%`;
+    }
 
-    document.getElementById("hub-tictactoe-lvl").innerText = playerProgress.tictactoe ? playerProgress.tictactoe.level : 0;
-    document.getElementById("hub-tictactoe-bar").style.width = playerProgress.tictactoe ? `${Math.min(playerProgress.tictactoe.level * 10, 100)}%` : '0%';
+    const hTictactoeLvl = document.getElementById("hub-tictactoe-lvl");
+    const hTictactoeBar = document.getElementById("hub-tictactoe-bar");
+    if (hTictactoeLvl && hTictactoeBar) {
+        hTictactoeLvl.innerText = playerProgress.tictactoe ? playerProgress.tictactoe.level : 0;
+        hTictactoeBar.style.width = playerProgress.tictactoe ? `${Math.min(playerProgress.tictactoe.level * 10, 100)}%` : '0%';
+    }
 }
 
-/* =========================================================================
-   SISTEMA DE DOWNLOAD, COMPRESSÃO E UPLOAD DE AVATAR
-   ========================================================================= */
 function triggerAvatarUpload() {
-    document.getElementById("avatar-input").click();
+    const input = document.getElementById("avatar-input");
+    if (input) input.click();
 }
 
 function handleAvatarSelection(event) {
@@ -255,15 +294,15 @@ function handleAvatarSelection(event) {
 }
 
 /* =========================================================================
-   SISTEMA DE INICIALIZAÇÃO DE JOGOS
+   SISTEMA DE MÁQUINAS DE JOGOS
    ========================================================================= */
-let currentGameId = "";
 function launchGame(gameId) {
     currentGameId = gameId;
     playClickSound();
     showView("game-container-view");
     const stage = document.getElementById("game-stage");
-    stage.innerHTML = "";
+    if (!stage) return;
+    stage.innerHTML = ""; 
 
     switch(gameId) {
         case 'clicker': buildClickerGame(stage); break;
@@ -273,7 +312,7 @@ function launchGame(gameId) {
         case 'stacker': buildStackerGame(stage); break;
         case 'tictactoe': buildTicTacToeGame(stage); break;
     }
-    loadGameFeedbackUI(); 
+    loadGameFeedbackUI();
 }
 
 /* -------------------------------------------------------------------------
@@ -321,14 +360,14 @@ function buildMemoryGame(stage) {
 
     stage.innerHTML = `
         <div class="score-display">Encontre os pares ocultos</div>
-        <div class="memory-grid" style="grid-template-columns: repeat(${pairsCount > 4 ? 4 : pairsCount}, 1fr)"></div>
+        <div class="memory-grid" style="grid-template-columns: repeat(${pairsCount > 4 ? 4 : pairsCount}, 1fr); display:grid; gap:10px; max-width:400px; margin:0 auto;"></div>
     `;
 
     const grid = stage.querySelector(".memory-grid");
     let flippedCards = [];
     let matchedPairs = 0;
 
-    deck.forEach((icon, index) => {
+    deck.forEach((icon) => {
         const card = document.createElement("div");
         card.classList.add("memory-card");
         card.dataset.icon = icon;
@@ -350,7 +389,7 @@ function buildMemoryGame(stage) {
                             playerProgress.memory.level += 1;
                             saveGameData();
                             triggerLevelUpEffects();
-                            stage.innerHTML += `<div class="success-banner">FASE COMPLETA! Carregando...</div>`;
+                            stage.innerHTML += `<div class="success-banner" style="text-align:center; margin-top:15px; color:#38ef7d; font-weight:bold;">FASE COMPLETA! Próxima...</div>`;
                             setTimeout(() => buildMemoryGame(stage), 1200);
                         }
                     } else {
@@ -385,9 +424,9 @@ function buildMathGame(stage) {
 
     stage.innerHTML = `
         <div class="score-display">Combo Acertos: ${playerProgress.math.streak} / 5</div>
-        <div class="math-question">${n1} ${op} ${n2} = ?</div>
-        <div class="math-options-container">
-            ${options.map(opt => `<button class="btn-math-option" data-val="${opt}">${opt}</button>`).join('')}
+        <div class="math-question" style="font-size:2rem; text-align:center; margin:20px 0; font-weight:bold; color:#00f2fe;">${n1} ${op} ${n2} = ?</div>
+        <div class="math-options-container" style="display:flex; gap:10px; justify-content:center;">
+            ${options.map(opt => `<button class="btn-math-option" data-val="${opt}" style="padding:10px 20px; font-size:1.2rem; cursor:pointer;">${opt}</button>`).join('')}
         </div>
     `;
 
@@ -423,7 +462,7 @@ function buildReactionGame(stage) {
 
     stage.innerHTML = `
         <div class="score-display">Espere o painel ficar verde e clique o mais rápido possível!</div>
-        <div id="reaction-zone" class="zone-action zone-waiting">AGUARDE...</div>
+        <div id="reaction-zone" class="zone-action zone-waiting" style="width:100%; max-width:400px; height:200px; margin:20px auto; display:flex; align-items:center; justify-content:center; font-weight:bold; cursor:pointer; border-radius:12px;">AGUARDE...</div>
     `;
 
     const zone = document.getElementById("reaction-zone");
@@ -434,162 +473,4 @@ function buildReactionGame(stage) {
     timeoutId = setTimeout(() => {
         state = "ready";
         zone.innerText = "CLIQUE AGORA!";
-        zone.classList.replace("zone-waiting", "zone-result");
-        startTime = window.performance.now();
-    }, delay);
-
-    zone.addEventListener("click", () => {
-        if (state === "idle") {
-            playClickSound();
-            buildReactionGame(stage);
-        } else if (state === "waiting") {
-            clearTimeout(timeoutId);
-            playGameOverSound();
-            state = "idle";
-            zone.innerText = "MUITO CEDO! Clique para tentar novamente.";
-            zone.classList.replace("zone-waiting", "zone-early");
-        } else if (state === "ready") {
-            playClickSound();
-            let reactionTime = Math.round(window.performance.now() - startTime);
-            state = "idle";
-            
-            if(reactionTime < playerProgress.reaction.bestTime) {
-                playerProgress.reaction.bestTime = reactionTime;
-                playerProgress.reaction.level += 1;
-                triggerLevelUpEffects();
-                saveGameData();
-            }
-            zone.innerText = `Seu tempo: ${reactionTime}ms! Clique para reiniciar.`;
-        }
-    });
-}
-
-/* -------------------------------------------------------------------------
-   [JOGO 5] EMPILHADOR MODERNO
-   ------------------------------------------------------------------------- */
-function buildStackerGame(stage) {
-    document.getElementById("current-game-title").innerText = "Empilhador Moderno";
-    document.getElementById("game-current-stat").innerText = `Recorde de Blocos: ${playerProgress.stacker.topScore}`;
-
-    stage.innerHTML = `
-        <div class="score-display">Andar Atual: <span id="stack-floor">1</span> / 12</div>
-        <div class="stacker-frame">
-            <div id="stacker-arena"></div>
-        </div>
-        <button class="btn-stack" id="btn-stack-drop">SOLTAR BLOCO</button>
-    `;
-
-    const arena = document.getElementById("stacker-arena");
-    const dropBtn = document.getElementById("btn-stack-drop");
-
-    let currentFloor = 1;
-    let blockPosition = 0;
-    let direction = 1; 
-    let blockSpeed = 15;
-    let lastLeft = 60; 
-    let gameInterval;
-
-    function spawnNextBlock() {
-        document.getElementById("stack-floor").innerText = currentFloor;
-
-       /* =========================================================================
-   SISTEMA COGNITIVO DE FEEDBACK, CHAT E SUGESTÕES GERAIS (BLINDADO)
-   ========================================================================= */
-
-// Carrega os dados de Feedback (Likes e Comentários) do Jogo Aberto
-function loadGameFeedbackUI() {
-    if (!currentGameId) return;
-
-    const globalFeedback = JSON.parse(localStorage.getItem("arcade_verse_feedback")) || {};
-    
-    if (!globalFeedback[currentGameId]) {
-        globalFeedback[currentGameId] = { likes: [], dislikes: [], comments: [] };
-    }
-
-    const gameData = globalFeedback[currentGameId];
-
-    // Elementos da tela de feedback
-    const txtLikePos = document.getElementById("txt-like-pos");
-    const txtLikeNeg = document.getElementById("txt-like-neg");
-    const btnLikePos = document.getElementById("btn-like-pos");
-    const btnLikeNeg = document.getElementById("btn-like-neg");
-    const commentsBox = document.getElementById("comments-box");
-
-    // Só atualiza se os elementos existirem na página atual
-    if (txtLikePos) txtLikePos.innerText = gameData.likes.length;
-    if (txtLikeNeg) txtLikeNeg.innerText = gameData.dislikes.length;
-
-    if (btnLikePos) btnLikePos.classList.toggle("active", gameData.likes.includes(currentLoggedInUser));
-    if (btnLikeNeg) btnLikeNeg.classList.toggle("active", gameData.dislikes.includes(currentLoggedInUser));
-
-    if (commentsBox) {
-        commentsBox.innerHTML = gameData.comments.map(c => `
-            <div class="comment-item">
-                <div class="author"><i class="fa-solid fa-user"></i> ${c.user}</div>
-                <div class="text">${c.text}</div>
-            </div>
-        `).join('');
-        commentsBox.scrollTop = commentsBox.scrollHeight;
-    }
-}
-
-// Processa la votación de Like / Dislike
-function submitGameVote(isLike) {
-    playClickSound();
-    const globalFeedback = JSON.parse(localStorage.getItem("arcade_verse_feedback")) || {};
-    if (!globalFeedback[currentGameId]) globalFeedback[currentGameId] = { likes: [], dislikes: [], comments: [] };
-    
-    const gameData = globalFeedback[currentGameId];
-    const user = currentLoggedInUser;
-
-    if (isLike) {
-        if (gameData.likes.includes(user)) {
-            gameData.likes = gameData.likes.filter(u => u !== user);
-        } else {
-            gameData.likes.push(user);
-            gameData.dislikes = gameData.dislikes.filter(u => u !== user);
-        }
-    } else {
-        if (gameData.dislikes.includes(user)) {
-            gameData.dislikes = gameData.dislikes.filter(u => u !== user);
-        } else {
-            gameData.dislikes.push(user);
-            gameData.likes = gameData.likes.filter(u => u !== user);
-        }
-    }
-
-    localStorage.setItem("arcade_verse_feedback", JSON.stringify(globalFeedback));
-    loadGameFeedbackUI();
-}
-
-// Processa o envio de Comentário no Chat do Jogo
-function submitGameComment(event) {
-    event.preventDefault();
-    playClickSound();
-
-    const input = document.getElementById("input-comment");
-    if (!input) return;
-    
-    const text = input.value.trim();
-    if (!text) return;
-
-    const globalFeedback = JSON.parse(localStorage.getItem("arcade_verse_feedback")) || {};
-    if (!globalFeedback[currentGameId]) globalFeedback[currentGameId] = { likes: [], dislikes: [], comments: [] };
-    
-    globalFeedback[currentGameId].comments.push({
-        user: currentLoggedInUser,
-        text: text
-    });
-
-    localStorage.setItem("arcade_verse_feedback", JSON.stringify(globalFeedback));
-    input.value = ""; 
-    loadGameFeedbackUI();
-}
-
-// Processa o envio de Sugestão Geral (No Hub)
-function submitGeneralSuggestion(event) {
-    event.preventDefault();
-    playClickSound();
-
-    const input = document.getElementById("input-suggestion");
-   
+     
