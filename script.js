@@ -278,7 +278,7 @@ function buildClickerGame(stage) {
                 playerProgress.clicker.level += 1;
                 playerProgress.clicker.currentPoints = 0;
                 playerProgress.clicker.requiredPoints = Math.floor(playerProgress.clicker.requiredPoints * 1.6);
-                alert("Base evoluída para o Nível " + playerProgress.clicker.level);
+                triggerLevelUpEffects();
             }
             saveGameData();
             render();
@@ -328,6 +328,7 @@ function buildMemoryGame(stage) {
                         if (matchedPairs === pairsCount) {
                             playerProgress.memory.level += 1;
                             saveGameData();
+                            triggerLevelUpEffects();
                             stage.innerHTML += `<div class="success-banner">FASE COMPLETA! Carregando...</div>`;
                             setTimeout(() => buildMemoryGame(stage), 1200);
                         }
@@ -380,7 +381,7 @@ function buildMathGame(stage) {
                 if(playerProgress.math.streak >= 5) {
                     playerProgress.math.level += 1;
                     playerProgress.math.streak = 0;
-                    alert("Avançou para o nível matemático " + playerProgress.math.level);
+                    triggerLevelUpEffects();
                 }
             } else {
                 playGameOverSound();
