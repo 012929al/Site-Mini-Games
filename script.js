@@ -739,6 +739,7 @@ function buildTicTacToeGame(stage) {
                 playClickSound();
                 statusText.innerHTML = `<span style="color:#38ef7d">MILAGRE! Você venceu a IA.</span>`;
                 playerProgress.tictactoe.level += 3; // Recompensa massiva
+                triggerLevelUpEffects();
             } else {
                 statusText.innerHTML = `<span style="color:var(--text-muted)">EMPATE! Você resistiu perfeitamente.</span>`;
                 playerProgress.tictactoe.level += 1; // Empatar com essa IA já é um mérito!
