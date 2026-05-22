@@ -479,4 +479,3 @@ function buildStackerGame(stage) {
 
     function spawnNextBlock() {
         document.getElementById("stack-floor").innerText = currentFloor;
-           
