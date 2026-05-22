@@ -846,6 +846,44 @@ function playGameOverSound() {
     osc.stop(audioCtx.currentTime + 0.5);
 }
 
+// 🏆 EFEITO 3: Som de Vitória / Subiu de Nível (Notas rápidas e ascendentes)
+function playVictorySound() {
+    if (!audioCtx) return;
+    
+    // Toca uma sequência rápida de 3 notas para criar o clima de conquista
+    const now = audioCtx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // Notas Dó, Mi, Sol, Dó (Mais agudo)
+    
+    notes.forEach((freq, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = "triangle"; // Som mais suave e limpo para a vitória
+        osc.frequency.setValueAtTime(freq, now + (index * 0.08)); // Toca uma depois da outra
+        
+        gain.gain.setValueAtTime(0.06, now + (index * 0.08));
+        gain.gain.exponentialRampToValueAtTime(0.001, now + (index * 0.08) + 0.15);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(now + (index * 0.08));
+        osc.stop(now + (index * 0.08) + 0.16);
+    });
+}
+
+// 🎉 FUNÇÃO DISPARADORA DE CONQUISTA (Som + Confetes)
+function triggerLevelUpEffects() {
+    playVictorySound();
+    
+    // Dispara confetes usando a biblioteca importada
+    confetti({
+        particleCount: 100, // Quantidade de confetes
+        spread: 70,         // Ângulo da explosão
+        origin: { y: 0.6 }  // Altura de onde eles saem (0.6 = meio da tela para baixo)
+    });
+}
+
 // 🚪 CONTROLE DE VISIBILIDADE: Para o som ao sair do Chrome ou editores
 document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
