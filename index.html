@@ -3,214 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArcadeVerse | Plataforma de Jogos Premium</title>
+    <title>Arcade Verse</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
-    <div class="bg-glow"></div>
-
-        <header id="main-header" style="display: none;">
-        <div class="logo">
-            <i class="fa-solid fa-gamepad icon-logo"></i>
-            <span>ARCADE<span>VERSE</span></span>
-        </div>
-        
-        <div class="menu-container">
-            <button onclick="toggleUserMenu()" class="hamburger-btn" id="hamburger-trigger">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-
-            <div id="user-menu-drawer" class="user-drawer">
-                <div class="drawer-profile">
-                    <div class="profile-avatar" onclick="triggerAvatarUpload()" title="Clique para mudar a foto de perfil">
-                        <img id="profile-img" src="" style="display: none; width: 100%; height: 100%; object-fit: cover;">
-                        <i id="profile-icon" class="fa-solid fa-user-astronaut"></i>
-                        <div class="avatar-overlay">
-                            <i class="fa-solid fa-camera"></i>
-                        </div>
-                    </div>
-                    <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="handleAvatarSelection(event)">
-
-                    <h3 id="drawer-username">Player</h3>
-                    <span id="drawer-level"><i class="fa-solid fa-crown"></i> Nível: 0</span>
-                </div>
-                <div class="drawer-divider"></div>
-                <div class="drawer-actions">
-                    <button onclick="switchAccount()" class="btn-drawer-action btn-switch">
-                        <i class="fa-solid fa-users-gear"></i> Trocar de Conta
-                    </button>
-                    <button onclick="logoutUser()" class="btn-drawer-action btn-logout">
-                        <i class="fa-solid fa-right-from-bracket"></i> Sair da Conta
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main class="container">
-        
-        <section id="auth-view" class="view active">
-            <div class="auth-wrapper">
-                <div class="auth-logo">
-                    <i class="fa-solid fa-gamepad icon-logo"></i>
-                    <span>ARCADE<span>VERSE</span></span>
-                </div>
-                
-                <div id="login-box" class="auth-card">
-                    <h2>Iniciar Sessão</h2>
+    <div id="auth-view" class="view-section">
+        <div class="auth-container">
+            <h1 class="arcade-logo"><i class="fa-solid fa-gamepad"></i> ARCADE VERSE</h1>
+            
+            <div class="auth-box">
+                <div class="auth-form-wrapper">
+                    <h2><i class="fa-solid fa-right-to-bracket"></i> Acessar Conta</h2>
                     <form id="login-form">
                         <div class="input-group">
-                            <label>Usuário</label>
-                            <input type="text" id="login-username" required placeholder="Digite seu username">
+                            <label for="login-user">Usuário</label>
+                            <input type="text" id="login-user" required autocomplete="username">
                         </div>
                         <div class="input-group">
-                            <label>Senha</label>
-                            <input type="password" id="login-password" required placeholder="••••••••">
+                            <label for="login-pass">Senha</label>
+                            <input type="password" id="login-pass" required autocomplete="current-password">
                         </div>
-                        <button type="submit" class="btn-auth">ENTRAR NO ARCADE</button>
+                        <button type="submit" class="btn-auth-submit">ENTRAR NO ARCADE</button>
                     </form>
-                    <p class="auth-switch">Não tem uma conta? <a href="#" onclick="toggleAuthMode('register')">Registre-se</a></p>
                 </div>
+                
+                <div class="auth-divider"></div>
 
-                <div id="register-box" class="auth-card" style="display: none;">
-                    <h2>Criar Nova Conta</h2>
+                <div class="auth-form-wrapper">
+                    <h2><i class="fa-solid fa-user-plus"></i> Novo Jogador</h2>
                     <form id="register-form">
                         <div class="input-group">
-                            <label>Escolha um Usuário</label>
-                            <input type="text" id="reg-username" required placeholder="Ex: Player123">
+                            <label for="reg-user">Escolha um Usuário</label>
+                            <input type="text" id="reg-user" required minlength="3">
                         </div>
                         <div class="input-group">
-                            <label>Crie uma Senha</label>
-                            <input type="password" id="reg-password" required placeholder="Mínimo 4 caracteres">
+                            <label for="reg-pass">Crie uma Senha</label>
+                            <input type="password" id="reg-pass" required minlength="4">
                         </div>
-                        <button type="submit" class="btn-auth btn-register-color">CRIAR CONTA</button>
+                        <button type="submit" class="btn-auth-submit btn-register">CRIAR CONTA</button>
                     </form>
-                    <p class="auth-switch">Já tem conta? <a href="#" onclick="toggleAuthMode('login')">Faça Login</a></p>
                 </div>
             </div>
-        </section>
-        
-        <section id="hub-view" class="view">
-            <h2 class="section-title">Escolha seu Desafio</h2>
+        </div>
+    </div>
+
+    <header id="main-header" style="display: none;">
+        <div class="header-brand">
+            <h1><i class="fa-solid fa-gamepad text-neon"></i> ArcadeVerse</h1>
+        </div>
+        <button id="hamburger-trigger" class="btn-hamburger" onclick="toggleUserMenu()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+    </header>
+
+    <div id="user-menu-drawer" class="user-drawer">
+        <div class="drawer-profile-area">
+            <div class="avatar-wrapper" onclick="triggerAvatarUpload()">
+                <img id="profile-img" src="" alt="Avatar" style="display: none;">
+                <i id="profile-icon" class="fa-solid fa-circle-user"></i>
+                <div class="avatar-hover-overlay"><i class="fa-solid fa-camera"></i></div>
+            </div>
+            <input type="file" id="avatar-input" accept="image/*" style="display: none;" onchange="handleAvatarSelection(event)">
+            
+            <h3 id="drawer-username">Jogador</h3>
+            <span id="drawer-level" class="badge-level"><i class="fa-solid fa-crown"></i> Nível: 0</span>
+        </div>
+        <nav class="drawer-nav">
+            <button onclick="switchAccount()"><i class="fa-solid fa-arrows-rotate"></i> Alternar Conta</button>
+            <button onclick="logoutUser()" class="btn-logout-draw"><i class="fa-solid fa-power-off"></i> Sair do Arcade</button>
+        </nav>
+    </div>
+
+    <div id="hub-view" class="view-section" style="display: none;">
+        <div class="hub-container">
+            <h2 class="section-title">Selecione uma Máquina de Jogo</h2>
+            
             <div class="games-grid">
-                
                 <div class="game-card" onclick="launchGame('clicker')">
-                    <div class="card-banner bg-clicker"><i class="fa-solid fa-hand-pointer game-icon"></i></div>
-                    <div class="card-body">
-                        <h3>Clicker Estelar</h3>
-                        <p>Evolua sua base minerando cristais cósmicos.</p>
-                        <div class="progress-info">
-                            <span>Nível <strong id="hub-clicker-lvl">1</strong></span>
-                            <div class="bar"><div id="hub-clicker-bar" class="progress"></div></div>
-                        </div>
+                    <div class="card-icon"><i class="fa-solid fa-bolt"></i></div>
+                    <h3>Clicker Estelar</h3>
+                    <p>Colete energia pura clicando freneticamente.</p>
+                    <div class="progress-container-mini">
+                        <span>Nível <b id="hub-clicker-lvl">1</b></span>
+                        <div class="bar-bg"><div id="hub-clicker-bar" class="bar-fill"></div></div>
                     </div>
                 </div>
 
                 <div class="game-card" onclick="launchGame('memory')">
-                    <div class="card-banner bg-memory"><i class="fa-solid fa-brain game-icon"></i></div>
-                    <div class="card-body">
-                        <h3>Memória Neon</h3>
-                        <p>Encontre os pares antes que o tempo acabe.</p>
-                        <div class="progress-info">
-                            <span>Fase <strong id="hub-memory-lvl">1</strong></span>
-                            <div class="bar"><div id="hub-memory-bar" class="progress"></div></div>
-                        </div>
+                    <div class="card-icon"><i class="fa-solid fa-brain"></i></div>
+                    <h3>Memória Neon</h3>
+                    <p>Encontre os pares de símbolos cibernéticos ocultos.</p>
+                    <div class="progress-container-mini">
+                        <span>Nível <b id="hub-memory-lvl">1</b></span>
+                        <div class="bar-bg"><div id="hub-memory-bar" class="bar-fill"></div></div>
                     </div>
                 </div>
 
                 <div class="game-card" onclick="launchGame('math')">
-                    <div class="card-banner bg-math"><i class="fa-solid fa-calculator game-icon"></i></div>
-                    <div class="card-body">
-                        <h3>Matemática Express</h3>
-                        <p>Raciocínio rápido contra o relógio digital.</p>
-                        <div class="progress-info">
-                            <span>Nível <strong id="hub-math-lvl">1</strong></span>
-                            <div class="bar"><div id="hub-math-bar" class="progress"></div></div>
-                        </div>
+                    <div class="card-icon"><i class="fa-solid fa-calculator"></i></div>
+                    <h3>Matemática Express</h3>
+                    <p>Resolva cálculos sob pressão e mantenha o combo.</p>
+                    <div class="progress-container-mini">
+                        <span>Nível <b id="hub-math-lvl">1</b></span>
+                        <div class="bar-bg"><div id="hub-math-bar" class="bar-fill"></div></div>
                     </div>
                 </div>
 
                 <div class="game-card" onclick="launchGame('reaction')">
-                    <div class="card-banner bg-reaction"><i class="fa-solid fa-bolt game-icon"></i></div>
-                    <div class="card-body">
-                        <h3>Reflexo Ninja</h3>
-                        <p>Clique no momento exato e teste sua velocidade.</p>
-                        <div class="progress-info">
-                            <span>Ranking <strong id="hub-reaction-lvl">1</strong></span>
-                            <div class="bar"><div id="hub-reaction-bar" class="progress"></div></div>
-                        </div>
+                    <div class="card-icon"><i class="fa-solid fa-user-ninja"></i></div>
+                    <h3>Reflexo Ninja</h3>
+                    <p>Clique no milissegundo exato em que a tela mudar.</p>
+                    <div class="progress-container-mini">
+                        <span>Nível <b id="hub-reaction-lvl">1</b></span>
+                        <div class="bar-bg"><div id="hub-reaction-bar" class="bar-fill"></div></div>
                     </div>
                 </div>
 
                 <div class="game-card" onclick="launchGame('stacker')">
-                    <div class="card-banner bg-stacker"><i class="fa-solid fa-layer-group game-icon"></i></div>
-                    <div class="card-body">
-                        <h3>Empilhador Moderno</h3>
-                        <p>Alinhe os blocos perfeitamente para subir.</p>
-                        <div class="progress-info">
-                            <span>Andar <strong id="hub-stacker-lvl">1</strong></span>
-                            <div class="bar"><div id="hub-stacker-bar" class="progress"></div></div>
-                        </div>
+                    <div class="card-icon"><i class="fa-solid fa-layer-group"></i></div>
+                    <h3>Empilhador Moderno</h3>
+                    <p>Alinhe os blocos móveis e construa a torre suprema.</p>
+                    <div class="progress-container-mini">
+                        <span>Nível <b id="hub-stacker-lvl">1</b></span>
+                        <div class="bar-bg"><div id="hub-stacker-bar" class="bar-fill"></div></div>
                     </div>
                 </div>
-                
+
                 <div class="game-card" onclick="launchGame('tictactoe')">
-                    <div class="card-banner bg-tictactoe"><i class="fa-solid fa-shapes game-icon"></i></div>
-                    <div class="card-body">
-                        <h3>IA Suprema (Velha)</h3>
-                        <p>Enfronte uma mente digital matemática impossível de vencer.</p>
-                        <div class="progress-info">
-                            <span>Pontos <strong id="hub-tictactoe-lvl">0</strong></span>
-                            <div class="bar"><div id="hub-tictactoe-bar" class="progress"></div></div>
-                        </div>
+                    <div class="card-icon"><i class="fa-solid fa-robot"></i></div>
+                    <h3>IA Suprema</h3>
+                    <p>Desafie uma Inteligência Artificial imbatível no jogo da velha.</p>
+                    <div class="progress-container-mini">
+                        <span>Nível <b id="hub-tictactoe-lvl">0</b></span>
+                        <div class="bar-bg"><div id="hub-tictactoe-bar" class="bar-fill"></div></div>
                     </div>
                 </div>
             </div>
-            
-            <div id="game-container-view" class="view-section" style="display: none;">
-                <div class="game-header-actions">
-                    <button class="btn-nav" onclick="backToHub()"><i class="fa-solid fa-arrow-left"></i> Voltar ao Hub</button>
-                    <h2 id="current-game-title">Nome do Jogo</h2>
-                    <span id="game-current-stat">Status</span>
-                </div>
-            
-                <div id="game-stage"></div>
-            
-                <hr class="neon-divider" style="margin: 40px 0 20px 0; border: 1px solid rgba(255,255,255,0.1);">
-            
-                <div class="feedback-section">
-                    <h3>Avaliação do Jogo</h3>
-                    <div class="like-system">
-                        <button id="btn-like-pos" onclick="submitGameVote(true)"><i class="fa-solid fa-thumbs-up"></i> <span id="txt-like-pos">0</span></button>
-                        <button id="btn-like-neg" onclick="submitGameVote(false)"><i class="fa-solid fa-thumbs-down"></i> <span id="txt-like-neg">0</span></button>
-                    </div>
-            
-                    <h3 style="margin-top: 20px;">Chat de Comentários</h3>
-                    <div class="comments-wrapper">
-                        <div id="comments-box" class="comments-box"></div>
-                        <form id="comment-form" onsubmit="submitGameComment(event)" class="comment-form-flex">
-                            <input type="text" id="input-comment" placeholder="Escreva um comentário sobre este jogo..." required>
-                            <button type="submit" class="btn-send-comment"><i class="fa-solid fa-paper-plane"></i></button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </section>
 
-        <section id="game-view" class="view">
-            <div class="game-header">
-                <button onclick="backToHub()" class="btn-back"><i class="fa-solid fa-arrow-left"></i> Voltar ao Hub</button>
+            <div class="suggestions-section" style="margin-top: 50px; padding: 25px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid rgba(255,255,255,0.05);">
+                <h2><i class="fa-solid fa-lightbulb" style="color: #ffd700;"></i> Central de Sugestões</h2>
+                <p style="color: #8a8a93; margin-bottom: 15px;">Tem alguma ideia para melhorar as mecânicas ou quer sugerir um novo jogo? Escreva abaixo!</p>
+                
+                <form id="suggestion-form" onsubmit="submitGeneralSuggestion(event)" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <input type="text" id="input-suggestion" placeholder="Digite sua sugestão ou ideia de melhoria..." style="flex: 1; padding: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff;" required>
+                    <button type="submit" style="background: #6200ea; color: #fff; border: none; padding: 0 22px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: background 0.2s;"><i class="fa-solid fa-plus"></i> Enviar</button>
+                </form>
+
+                <div id="suggestions-list" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-container-view" class="view-section" style="display: none;">
+        <div class="game-wrapper-box">
+            <div class="game-header-actions">
+                <button class="btn-nav" onclick="backToHub()"><i class="fa-solid fa-arrow-left"></i> Voltar ao Hub</button>
                 <h2 id="current-game-title">Nome do Jogo</h2>
-                <div id="game-current-stat">Nível: 1</div>
+                <span id="game-current-stat">Status do Jogo</span>
             </div>
-            <div id="game-stage" class="game-stage"></div>
-        </section>
 
-    </main>
+            <div id="game-stage"></div>
 
+            <hr class="neon-divider" style="margin: 45px 0 25px 0; border: none; border-top: 1px solid rgba(255,255,255,0.08);">
+
+            <div class="feedback-section">
+                <h3>Avaliação do Jogo</h3>
+                <div class="like-system" style="display: flex; gap: 15px; margin-top: 10px;">
+                    <button id="btn-like-pos" onclick="submitGameVote(true)"><i class="fa-solid fa-thumbs-up"></i> Curtir (<span id="txt-like-pos">0</span>)</button>
+                    <button id="btn-like-neg" onclick="submitGameVote(false)"><i class="fa-solid fa-thumbs-down"></i> Não curtir (<span id="txt-like-neg">0</span>)</button>
+                </div>
+
+                <h3 style="margin-top: 30px;"><i class="fa-regular fa-comments"></i> Chat de Comentários</h3>
+                <div class="comments-wrapper" style="background: rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 15px; margin-top: 10px;">
+                    <div id="comments-box" class="comments-box" style="max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;"></div>
+                    <form id="comment-form" onsubmit="submitGameComment(event)" style="display: flex; gap: 10px;">
+                        <input type="text" id="input-comment" placeholder="Escreva sua opinião sobre este jogo..." style="flex: 1; padding: 10px; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff;" required>
+                        <button type="submit" style="background: #6200ea; color: white; border: none; padding: 0 18px; border-radius: 8px; cursor: pointer;"><i class="fa-solid fa-paper-plane"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
