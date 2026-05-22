@@ -169,6 +169,35 @@
                     </div>
                 </div>
             </div>
+            
+            <div id="game-container-view" class="view-section" style="display: none;">
+                <div class="game-header-actions">
+                    <button class="btn-nav" onclick="backToHub()"><i class="fa-solid fa-arrow-left"></i> Voltar ao Hub</button>
+                    <h2 id="current-game-title">Nome do Jogo</h2>
+                    <span id="game-current-stat">Status</span>
+                </div>
+            
+                <div id="game-stage"></div>
+            
+                <hr class="neon-divider" style="margin: 40px 0 20px 0; border: 1px solid rgba(255,255,255,0.1);">
+            
+                <div class="feedback-section">
+                    <h3>Avaliação do Jogo</h3>
+                    <div class="like-system">
+                        <button id="btn-like-pos" onclick="submitGameVote(true)"><i class="fa-solid fa-thumbs-up"></i> <span id="txt-like-pos">0</span></button>
+                        <button id="btn-like-neg" onclick="submitGameVote(false)"><i class="fa-solid fa-thumbs-down"></i> <span id="txt-like-neg">0</span></button>
+                    </div>
+            
+                    <h3 style="margin-top: 20px;">Chat de Comentários</h3>
+                    <div class="comments-wrapper">
+                        <div id="comments-box" class="comments-box"></div>
+                        <form id="comment-form" onsubmit="submitGameComment(event)" class="comment-form-flex">
+                            <input type="text" id="input-comment" placeholder="Escreva um comentário sobre este jogo..." required>
+                            <button type="submit" class="btn-send-comment"><i class="fa-solid fa-paper-plane"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <section id="game-view" class="view">
@@ -182,7 +211,6 @@
 
     </main>
 
-        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
