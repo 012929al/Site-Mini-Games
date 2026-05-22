@@ -1,5 +1,5 @@
 /* =========================================================================
-   BANCO DE DADOS LOCAL E CONFIGURAÇÕES INICIAIS
+   BANCO DE DADOS LOCAL E CONFIGURAÇÕES INICIAIS (CORRIGIDO)
    ========================================================================= */
 let usersDatabase = [];
 let currentLoggedInUser = null;
@@ -14,8 +14,16 @@ const defaultProgress = {
     tictactoe: { level: 0 }
 };
 
-// Inicialização do Sistema de Autenticação
+// Inicialização segura do sistema
 document.addEventListener("DOMContentLoaded", () => {
+    // Garante a criação dos storages de feedback antes de verificar o login
+    if (!localStorage.getItem("arcade_verse_feedback")) {
+        localStorage.setItem("arcade_verse_feedback", JSON.stringify({}));
+    }
+    if (!localStorage.getItem("arcade_verse_suggestions")) {
+        localStorage.setItem("arcade_verse_suggestions", JSON.stringify([]));
+    }
+
     loadAuthSystem();
     setupAuthEvents();
 });
