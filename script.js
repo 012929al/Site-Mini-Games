@@ -491,54 +491,58 @@ function buildStackerGame(stage) {
 
     function spawnNextBlock() {
         document.getElementById("stack-floor").innerText = currentFloor;
-        
-        /* =========================================================================
-   SISTEMA COGNITIVO DE FEEDBACK, CHAT E SUGESTÕES GERAIS
+
+       /* =========================================================================
+   SISTEMA COGNITIVO DE FEEDBACK, CHAT E SUGESTÕES GERAIS (BLINDADO)
    ========================================================================= */
+
 // Carrega os dados de Feedback (Likes e Comentários) do Jogo Aberto
 function loadGameFeedbackUI() {
     if (!currentGameId) return;
 
-    const globalFeedback = JSON.parse(localStorage.getItem("arcade_verse_feedback"));
+    const globalFeedback = JSON.parse(localStorage.getItem("arcade_verse_feedback")) || {};
     
-    // Se o jogo não tiver registro ainda, cria a estrutura dele
     if (!globalFeedback[currentGameId]) {
         globalFeedback[currentGameId] = { likes: [], dislikes: [], comments: [] };
     }
 
     const gameData = globalFeedback[currentGameId];
 
-    // Atualiza contadores de likes na tela
-    document.getElementById("txt-like-pos").innerText = gameData.likes.length;
-    document.getElementById("txt-like-neg").innerText = gameData.dislikes.length;
-
-    // Colore o botão se o jogador atual já tiver votado
-    document.getElementById("btn-like-pos").classList.toggle("active", gameData.likes.includes(currentLoggedInUser));
-    document.getElementById("btn-like-neg").classList.toggle("active", gameData.dislikes.includes(currentLoggedInUser));
-
-    // Renderiza a lista de comentários
+    // Elementos da tela de feedback
+    const txtLikePos = document.getElementById("txt-like-pos");
+    const txtLikeNeg = document.getElementById("txt-like-neg");
+    const btnLikePos = document.getElementById("btn-like-pos");
+    const btnLikeNeg = document.getElementById("btn-like-neg");
     const commentsBox = document.getElementById("comments-box");
-    commentsBox.innerHTML = gameData.comments.map(c => `
-        <div class="comment-item">
-            <div class="author"><i class="fa-solid fa-user"></i> ${c.user}</div>
-            <div class="text">${c.text}</div>
-        </div>
-    `).join('');
-    
-    // Rola o chat de comentários para o final automaticamente
-    commentsBox.scrollTop = commentsBox.scrollHeight;
+
+    // Só atualiza se os elementos existirem na página atual
+    if (txtLikePos) txtLikePos.innerText = gameData.likes.length;
+    if (txtLikeNeg) txtLikeNeg.innerText = gameData.dislikes.length;
+
+    if (btnLikePos) btnLikePos.classList.toggle("active", gameData.likes.includes(currentLoggedInUser));
+    if (btnLikeNeg) btnLikeNeg.classList.toggle("active", gameData.dislikes.includes(currentLoggedInUser));
+
+    if (commentsBox) {
+        commentsBox.innerHTML = gameData.comments.map(c => `
+            <div class="comment-item">
+                <div class="author"><i class="fa-solid fa-user"></i> ${c.user}</div>
+                <div class="text">${c.text}</div>
+            </div>
+        `).join('');
+        commentsBox.scrollTop = commentsBox.scrollHeight;
+    }
 }
 
-// Processa a votação de Like / Dislike
+// Processa la votación de Like / Dislike
 function submitGameVote(isLike) {
     playClickSound();
-    const globalFeedback = JSON.parse(localStorage.getItem("arcade_verse_feedback"));
+    const globalFeedback = JSON.parse(localStorage.getItem("arcade_verse_feedback")) || {};
+    if (!globalFeedback[currentGameId]) globalFeedback[currentGameId] = { likes: [], dislikes: [], comments: [] };
+    
     const gameData = globalFeedback[currentGameId];
-
     const user = currentLoggedInUser;
 
     if (isLike) {
-        // Se já deu like, remove. Se não, adiciona e remove do dislike.
         if (gameData.likes.includes(user)) {
             gameData.likes = gameData.likes.filter(u => u !== user);
         } else {
@@ -546,7 +550,6 @@ function submitGameVote(isLike) {
             gameData.dislikes = gameData.dislikes.filter(u => u !== user);
         }
     } else {
-        // Se já deu dislike, remove. Se não, adiciona e remove do like.
         if (gameData.dislikes.includes(user)) {
             gameData.dislikes = gameData.dislikes.filter(u => u !== user);
         } else {
@@ -565,19 +568,21 @@ function submitGameComment(event) {
     playClickSound();
 
     const input = document.getElementById("input-comment");
+    if (!input) return;
+    
     const text = input.value.trim();
     if (!text) return;
 
-    const globalFeedback = JSON.parse(localStorage.getItem("arcade_verse_feedback"));
+    const globalFeedback = JSON.parse(localStorage.getItem("arcade_verse_feedback")) || {};
+    if (!globalFeedback[currentGameId]) globalFeedback[currentGameId] = { likes: [], dislikes: [], comments: [] };
     
-    // Adiciona o novo comentário ao banco
     globalFeedback[currentGameId].comments.push({
         user: currentLoggedInUser,
         text: text
     });
 
     localStorage.setItem("arcade_verse_feedback", JSON.stringify(globalFeedback));
-    input.value = ""; // Limpa a barra de texto
+    input.value = ""; 
     loadGameFeedbackUI();
 }
 
@@ -587,38 +592,4 @@ function submitGeneralSuggestion(event) {
     playClickSound();
 
     const input = document.getElementById("input-suggestion");
-    const text = input.value.trim();
-    if (!text) return;
-
-    const suggestions = JSON.parse(localStorage.getItem("arcade_verse_suggestions"));
-    
-    // Insere a nova sugestão na lista
-    suggestions.unshift({
-        user: currentLoggedInUser,
-        text: text
-    });
-
-    localStorage.setItem("arcade_verse_suggestions", JSON.stringify(suggestions));
-    input.value = ""; // Limpa campo
-    renderSuggestions();
-}
-
-// Renderiza a lista de sugestões gerais na tela
-function renderSuggestions() {
-    const listContainer = document.getElementById("suggestions-list");
-    if (!listContainer) return;
-
-    const suggestions = JSON.parse(localStorage.getItem("arcade_verse_suggestions"));
-
-    if (suggestions.length === 0) {
-        listContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.9rem;">Nenhuma sugestão enviada ainda. Seja o primeiro!</p>`;
-        return;
-    }
-
-    listContainer.innerHTML = suggestions.map(s => `
-        <div class="suggestion-item">
-            <div class="author" style="color: #ffd700; font-size: 0.85rem; font-weight: bold;"><i class="fa-solid fa-lightbulb"></i> ${s.user} sugeriu:</div>
-            <div class="text" style="color: #fff; margin-top: 2px;">${s.text}</div>
-        </div>
-    `).join('');
-}
+   
