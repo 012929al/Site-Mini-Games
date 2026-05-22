@@ -439,6 +439,7 @@ function buildReactionGame(stage) {
             if(reactionTime < playerProgress.reaction.bestTime) {
                 playerProgress.reaction.bestTime = reactionTime;
                 playerProgress.reaction.level += 1;
+                triggerLevelUpEffects();
                 saveGameData();
             }
             zone.className = "reaction-zone zone-result";
@@ -479,10 +480,10 @@ function buildStackerGame(stage) {
     function spawnNextBlock() {
         currentFloor++;
         if (currentFloor > 12) { 
-            alert("Torre Concluída! Subiu de Ranking.");
             playerProgress.stacker.level += 1;
             saveGameData();
             clearInterval(gameInterval);
+            triggerLevelUpEffects();
             buildStackerGame(stage);
             return;
         }
